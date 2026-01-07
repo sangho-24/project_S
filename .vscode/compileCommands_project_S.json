@@ -1,0 +1,90 @@
+[
+	{
+		"file": "Z:\\unreal\\project_S\\Source\\project_S\\Private\\Character\\CharBase.cpp",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+			"@Z:\\unreal\\project_S\\.vscode\\compileCommands_project_S\\project_S.1.rsp"
+		],
+		"directory": "D:\\Program Files\\UE_5.7\\Engine\\Source"
+	},
+	{
+		"file": "Z:\\unreal\\project_S\\Source\\project_S\\Private\\Input\\MainPlayerController.cpp",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+			"@Z:\\unreal\\project_S\\.vscode\\compileCommands_project_S\\project_S.1.rsp"
+		],
+		"directory": "D:\\Program Files\\UE_5.7\\Engine\\Source"
+	},
+	{
+		"file": "Z:\\unreal\\project_S\\Source\\project_S\\Private\\SHGameInstance.cpp",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+			"@Z:\\unreal\\project_S\\.vscode\\compileCommands_project_S\\project_S.1.rsp"
+		],
+		"directory": "D:\\Program Files\\UE_5.7\\Engine\\Source"
+	},
+	{
+		"file": "Z:\\unreal\\project_S\\Source\\project_S\\Private\\SHGameModeBase.cpp",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+			"@Z:\\unreal\\project_S\\.vscode\\compileCommands_project_S\\project_S.1.rsp"
+		],
+		"directory": "D:\\Program Files\\UE_5.7\\Engine\\Source"
+	},
+	{
+		"file": "Z:\\unreal\\project_S\\Source\\project_S\\Public\\Character\\CharBase.h",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+			"@Z:\\unreal\\project_S\\.vscode\\compileCommands_project_S\\project_S.1.rsp"
+		],
+		"directory": "D:\\Program Files\\UE_5.7\\Engine\\Source"
+	},
+	{
+		"file": "Z:\\unreal\\project_S\\Source\\project_S\\Public\\Input\\MainPlayerController.h",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+			"@Z:\\unreal\\project_S\\.vscode\\compileCommands_project_S\\project_S.1.rsp"
+		],
+		"directory": "D:\\Program Files\\UE_5.7\\Engine\\Source"
+	},
+	{
+		"file": "Z:\\unreal\\project_S\\Source\\project_S\\Public\\SHGameInstance.h",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+			"@Z:\\unreal\\project_S\\.vscode\\compileCommands_project_S\\project_S.1.rsp"
+		],
+		"directory": "D:\\Program Files\\UE_5.7\\Engine\\Source"
+	},
+	{
+		"file": "Z:\\unreal\\project_S\\Source\\project_S\\Public\\SHGameModeBase.h",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+			"@Z:\\unreal\\project_S\\.vscode\\compileCommands_project_S\\project_S.1.rsp"
+		],
+		"directory": "D:\\Program Files\\UE_5.7\\Engine\\Source"
+	},
+	{
+		"file": "Z:\\unreal\\project_S\\Source\\project_S\\project_S.Build.cs",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+			"@Z:\\unreal\\project_S\\.vscode\\compileCommands_project_S\\project_S.1.rsp"
+		],
+		"directory": "D:\\Program Files\\UE_5.7\\Engine\\Source"
+	},
+	{
+		"file": "Z:\\unreal\\project_S\\Source\\project_S\\project_S.cpp",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+			"@Z:\\unreal\\project_S\\.vscode\\compileCommands_project_S\\project_S.1.rsp"
+		],
+		"directory": "D:\\Program Files\\UE_5.7\\Engine\\Source"
+	},
+	{
+		"file": "Z:\\unreal\\project_S\\Source\\project_S\\project_S.h",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+			"@Z:\\unreal\\project_S\\.vscode\\compileCommands_project_S\\project_S.1.rsp"
+		],
+		"directory": "D:\\Program Files\\UE_5.7\\Engine\\Source"
+	}
+]
