@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "AbilitySystemComponent.h"
+#include "Kismet/KismetSystemLibrary.h" // 추가
 
 // Sets default values
 ACharBase::ACharBase()
@@ -47,7 +48,7 @@ ACharBase::ACharBase()
     // 스프링암을 CameraRoot에 부착
     SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
     SpringArm->SetupAttachment(CameraRoot);
-    SpringArm->TargetArmLength = 1200.0f;
+    SpringArm->TargetArmLength = 1000.0f;
     // SpringArm->SocketOffset = FVector(0.0f, 0.0f, 60.0f); // 높이 조정
     SpringArm->SetWorldRotation(FRotator(-45.0f, 0.0f, 0.0f)); // 각도 조정
     SpringArm->bInheritPitch = false;
@@ -125,24 +126,26 @@ void ACharBase::ApplyHorizontalDamping(float DeltaTime)
         return;
     }
 
+
     // 수평 속도 감쇠
     FVector CurrentVelocity = Sphere->GetPhysicsLinearVelocity();
-    FVector HorizontalVelocity(CurrentVelocity.X, CurrentVelocity.Y, 0.0f);
+    FVector HorizonVelocity(CurrentVelocity.X, CurrentVelocity.Y, 0.0f);
 
-    if (!HorizontalVelocity.IsNearlyZero())
+    if (!HorizonVelocity.IsNearlyZero())
     {
         if (!FMath::IsNearlyZero(CurrentInputVector.Y))
         {
-            HorizontalVelocity.X = 0.0f;
+            HorizonVelocity.X = HorizonVelocity.X * (1.0f - FMath::Abs(CurrentInputVector.Y));
         }
         if (!FMath::IsNearlyZero(CurrentInputVector.X))
         {
-            HorizontalVelocity.Y = 0.0f;
+            HorizonVelocity.Y = HorizonVelocity.Y * (1.0f - FMath::Abs(CurrentInputVector.X));
         }
-        FVector DragForce = -HorizontalVelocity * DragPowerRate 
-            + (-HorizontalVelocity.GetSafeNormal()) * DragPowerFlat;
+        FVector DragForce = -HorizonVelocity * DragPowerRate 
+            + (-HorizonVelocity.GetSafeNormal()) * DragPowerFlat;
         Sphere->AddForce(DragForce * DeltaTime, NAME_None, true);
     }
+
     // 회전 감쇠(Z축만)
     const FVector AngularVelocity = Sphere->GetPhysicsAngularVelocityInRadians();
     if (!FMath::IsNearlyZero(AngularVelocity.Z))
@@ -150,7 +153,26 @@ void ACharBase::ApplyHorizontalDamping(float DeltaTime)
         const FVector AngularDrag(0.0f, 0.0f, -AngularVelocity.Z * AngularDragPower);
         Sphere->AddTorqueInRadians(AngularDrag * DeltaTime, NAME_None, true);
     }
+
+    // 속도 표시
+    int32 UniqueKey = GetUniqueID();
+    int32 UniqueKey2 = GetUniqueID();
+    FString ModeString = HasAuthority() ? TEXT("리슨 서버") : TEXT("클라이언트");
+    if (GEngine && IsLocallyControlled())
+    {
+        GEngine->AddOnScreenDebugMessage(1, 5.f,
+            HasAuthority() ? FColor::Blue : FColor::Green,
+            FString::Printf(TEXT("%s 속도 %f / %f"),
+                *ModeString, CurrentVelocity.X, CurrentVelocity.Y));
+        GEngine->AddOnScreenDebugMessage(2, 5.f,
+            HasAuthority() ? FColor::Blue : FColor::Green,
+            FString::Printf(TEXT("%s CurrentInputVector %f / %f"),
+                *ModeString, CurrentInputVector.X, CurrentInputVector.Y));
+    }
 }
+
+
+
 
 // Called to bind functionality to input
 void ACharBase::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
@@ -160,14 +182,15 @@ void ACharBase::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
     {
         EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACharBase::Move);
         EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ACharBase::MoveCompleted);
-        EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &ACharBase::Shoot);
+        EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharBase::Jump);
     }
 }
 
 void ACharBase::Move(const FInputActionValue &Value)
 {
     FVector2D InputVector = Value.Get<FVector2D>();
-    CurrentInputVector = InputVector;
+    CurrentInputVector = InputVector.GetSafeNormal();
+
     if (GetLocalRole() == ROLE_Authority)
     {
         MovementImpulse(InputVector);
@@ -181,9 +204,24 @@ void ACharBase::Move(const FInputActionValue &Value)
 void ACharBase::MoveCompleted()
 {
     CurrentInputVector = FVector2D::ZeroVector;
+    if (GetLocalRole() != ROLE_Authority)
+    {
+        ServerMoveCompleted();
+    }
 }
 
-void ACharBase::Shoot(const FInputActionValue &Value)
+void ACharBase::ServerMovementImpulse_Implementation(FVector2D InputVector)
+{
+    CurrentInputVector = InputVector.GetSafeNormal();
+    MovementImpulse(InputVector);
+}
+
+void ACharBase::ServerMoveCompleted_Implementation()
+{
+    CurrentInputVector = FVector2D::ZeroVector;
+}
+
+void ACharBase::Jump(const FInputActionValue &Value)
 {
     UE_LOG(LogTemp, Warning, TEXT("빵이예요!"));
     if (!AbilitySystemComponent)
@@ -196,6 +234,8 @@ void ACharBase::Shoot(const FInputActionValue &Value)
     if (GEngine)
     GEngine->AddOnScreenDebugMessage(-1, 5.f, bOk ? FColor::Blue : FColor::Red, FString::Printf(TEXT("쩜프 %s"), bOk ? TEXT("띠용") : TEXT("실패")));
     UE_LOG(LogTemp, Warning, TEXT("쩜프 %s"), bOk ? TEXT("띠용") : TEXT("실패"));
+    FString TagString = JumpAbilityTag.ToString();
+    UE_LOG(LogTemp, Warning, TEXT("%s"), *TagString);
 }
 
 void ACharBase::MovementImpulse(FVector2D InputVector)
@@ -214,7 +254,6 @@ void ACharBase::MovementImpulse(FVector2D InputVector)
         FVector CurrentHorizontalVelocity = FVector(CurrentVelocity.X, CurrentVelocity.Y, 0.0f);
 
         float InputDirectionSpeed = FVector::DotProduct(CurrentHorizontalVelocity, ImpulseDirection);
-
         if (InputDirectionSpeed < MaxSpeed)
         {
             Sphere->AddImpulse(ImpulseDirection * ImpulseStrength, NAME_None, false);
@@ -222,10 +261,7 @@ void ACharBase::MovementImpulse(FVector2D InputVector)
     }
 }
 
-void ACharBase::ServerMovementImpulse_Implementation(FVector2D InputVector)
-{
-    MovementImpulse(InputVector);
-}
+
 
 UAbilitySystemComponent* ACharBase::GetAbilitySystemComponent() const
 {

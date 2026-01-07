@@ -10,7 +10,8 @@
 UGA_Jump::UGA_Jump()
 {
     InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-    AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(TEXT("Ability.Jump")));
+    //AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(TEXT("Ability.Jump")));
+    SetAssetTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag(TEXT("Ability.Jump"))));
 }
 
 void UGA_Jump::ActivateAbility(

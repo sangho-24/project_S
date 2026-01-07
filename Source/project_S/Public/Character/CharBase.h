@@ -53,13 +53,13 @@ protected:
 	UInputAction *MoveAction;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction *ShootAction;
+	UInputAction *JumpAction;
 
 // 멤버 변수
 public:
 	ACharBase();
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
-	float MaxSpeed = 500.0f;
+	float MaxSpeed = 600.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	float ImpulseStrength = 6000.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
@@ -89,12 +89,14 @@ public:
 protected:
 	void Move(const FInputActionValue &Value);
 	void MoveCompleted();
-	void Shoot(const FInputActionValue &Value);
+	void Jump(const FInputActionValue &Value);
 	void MovementImpulse(FVector2D InputVector);
 	void ApplyHorizontalDamping(float DeltaTime);
 
 	UFUNCTION(Server, Unreliable)
 	void ServerMovementImpulse(FVector2D InputVector);
+	UFUNCTION(Server, Unreliable)
+	void ServerMoveCompleted();
 
 public:
 	FORCEINLINE UPrimitiveComponent* GetPhysicsComponent() const { return Sphere; }
