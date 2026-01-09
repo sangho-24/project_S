@@ -9,6 +9,8 @@
 #include "InputActionValue.h"
 #include "AbilitySystemComponent.h"
 #include "Kismet/KismetSystemLibrary.h" // 추가
+#include "Gas/ArenaAttributeSet.h"
+
 
 // Sets default values
 ACharBase::ACharBase()
@@ -26,6 +28,9 @@ ACharBase::ACharBase()
     AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
     AbilitySystemComponent->SetIsReplicated(true);
     AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+    // AttributeSet 생성
+    AttributeSet = CreateDefaultSubobject<UArenaAttributeSet>(TEXT("AttributeSet"));
 
     // Sphere를 RootComponent로 설정하고 물리 활성화
     Sphere = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Sphere"));
@@ -69,6 +74,10 @@ void ACharBase::BeginPlay()
     {
         JumpAbilityTag = FGameplayTag::RequestGameplayTag(TEXT("Ability.Jump"));
     }
+    if (!BasicShotAbilityTag.IsValid())
+    {
+        BasicShotAbilityTag = FGameplayTag::RequestGameplayTag(TEXT("Ability.BasicShot"));
+    }
 }
 
 // 서버에서만 호출
@@ -95,6 +104,18 @@ void ACharBase::InitializeAbilitySystem()
 {
     AbilitySystemComponent->InitAbilityActorInfo(this, this);
     GiveStartingAbilities();
+    UE_LOG(LogTemp, Display, TEXT("화긴"));
+    // Attribute 값 확인
+    if (AttributeSet && GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow,
+            FString::Printf(TEXT("CurrentHP: %.1f / MaxHP: %.1f"),
+                AttributeSet->GetCurrentHP(), AttributeSet->GetMaxHP()));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Display, TEXT("안돼유~!~!~!~!~!"));
+    }
 }
 
 void ACharBase::GiveStartingAbilities()
@@ -171,9 +192,6 @@ void ACharBase::ApplyHorizontalDamping(float DeltaTime)
     }
 }
 
-
-
-
 // Called to bind functionality to input
 void ACharBase::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 {
@@ -210,34 +228,6 @@ void ACharBase::MoveCompleted()
     }
 }
 
-void ACharBase::ServerMovementImpulse_Implementation(FVector2D InputVector)
-{
-    CurrentInputVector = InputVector.GetSafeNormal();
-    MovementImpulse(InputVector);
-}
-
-void ACharBase::ServerMoveCompleted_Implementation()
-{
-    CurrentInputVector = FVector2D::ZeroVector;
-}
-
-void ACharBase::Jump(const FInputActionValue &Value)
-{
-    UE_LOG(LogTemp, Warning, TEXT("빵이예요!"));
-    if (!AbilitySystemComponent)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("ASC 없음"));
-        return;
-    }
-    
-    const bool bOk = AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(JumpAbilityTag),true);
-    if (GEngine)
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, bOk ? FColor::Blue : FColor::Red, FString::Printf(TEXT("쩜프 %s"), bOk ? TEXT("띠용") : TEXT("실패")));
-    UE_LOG(LogTemp, Warning, TEXT("쩜프 %s"), bOk ? TEXT("띠용") : TEXT("실패"));
-    FString TagString = JumpAbilityTag.ToString();
-    UE_LOG(LogTemp, Warning, TEXT("%s"), *TagString);
-}
-
 void ACharBase::MovementImpulse(FVector2D InputVector)
 {
     if (!Sphere || !Sphere->IsSimulatingPhysics())
@@ -261,7 +251,38 @@ void ACharBase::MovementImpulse(FVector2D InputVector)
     }
 }
 
+void ACharBase::ServerMovementImpulse_Implementation(FVector2D InputVector)
+{
+    CurrentInputVector = InputVector.GetSafeNormal();
+    MovementImpulse(InputVector);
+}
 
+void ACharBase::ServerMoveCompleted_Implementation()
+{
+    CurrentInputVector = FVector2D::ZeroVector;
+}
+
+void ACharBase::Jump(const FInputActionValue &Value)
+{
+    if (!AbilitySystemComponent)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ASC 없음"));
+        return;
+    }
+    
+    const bool bOk = AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(JumpAbilityTag),true);
+    if (GEngine)
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, bOk ? FColor::Blue : FColor::Red, FString::Printf(TEXT("쩜프 %s"), bOk ? TEXT("띠용") : TEXT("실패")));
+    UE_LOG(LogTemp, Warning, TEXT("쩜프 %s"), bOk ? TEXT("띠용") : TEXT("실패"));
+    FString TagString = JumpAbilityTag.ToString();
+    UE_LOG(LogTemp, Warning, TEXT("%s"), *TagString);
+}
+
+void ACharBase::BasicShot(const FInputActionValue& Value)
+{
+    if (GEngine)
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("빵이예요~!")));
+}
 
 UAbilitySystemComponent* ACharBase::GetAbilitySystemComponent() const
 {

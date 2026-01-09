@@ -16,6 +16,7 @@ struct FInputActionValue;
 class APlayerController;
 class UInputAction;
 class UAbilitySystemComponent;
+class UArenaAttributeSet;
 
 UCLASS()
 class PROJECT_S_API ACharBase : public APawn, public IAbilitySystemInterface
@@ -36,6 +37,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
 	UAbilitySystemComponent* AbilitySystemComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
+	UArenaAttributeSet* AttributeSet;
+
 // 프로텍트 컴포넌트
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -47,6 +51,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
 	FGameplayTag JumpAbilityTag;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	FGameplayTag BasicShotAbilityTag;
+
 // 인풋 액션
 protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -54,6 +61,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction *JumpAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* BasicShotAction;
 
 // 멤버 변수
 public:
@@ -89,9 +99,10 @@ public:
 protected:
 	void Move(const FInputActionValue &Value);
 	void MoveCompleted();
-	void Jump(const FInputActionValue &Value);
 	void MovementImpulse(FVector2D InputVector);
 	void ApplyHorizontalDamping(float DeltaTime);
+	void Jump(const FInputActionValue &Value);
+	void BasicShot(const FInputActionValue& Value);
 
 	UFUNCTION(Server, Unreliable)
 	void ServerMovementImpulse(FVector2D InputVector);
@@ -100,6 +111,8 @@ protected:
 
 public:
 	FORCEINLINE UPrimitiveComponent* GetPhysicsComponent() const { return Sphere; }
+	FORCEINLINE UArenaAttributeSet* GetAttributeSet() const { return AttributeSet; }
+
 private:
     void InitializeAbilitySystem();
     void GiveStartingAbilities();
