@@ -104,17 +104,12 @@ void ACharBase::InitializeAbilitySystem()
 {
     AbilitySystemComponent->InitAbilityActorInfo(this, this);
     GiveStartingAbilities();
-    UE_LOG(LogTemp, Display, TEXT("화긴"));
     // Attribute 값 확인
-    if (AttributeSet && GEngine)
+    if (AttributeSet && GEngine && IsLocallyControlled())
     {
         GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow,
             FString::Printf(TEXT("CurrentHP: %.1f / MaxHP: %.1f"),
                 AttributeSet->GetCurrentHP(), AttributeSet->GetMaxHP()));
-    }
-    else
-    {
-        UE_LOG(LogTemp, Display, TEXT("안돼유~!~!~!~!~!"));
     }
 }
 
@@ -201,6 +196,7 @@ void ACharBase::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
         EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACharBase::Move);
         EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ACharBase::MoveCompleted);
         EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharBase::Jump);
+        EnhancedInputComponent->BindAction(BasicShotAction, ETriggerEvent::Triggered, this, &ACharBase::BasicShot);
     }
 }
 
@@ -280,8 +276,17 @@ void ACharBase::Jump(const FInputActionValue &Value)
 
 void ACharBase::BasicShot(const FInputActionValue& Value)
 {
+    if (!AbilitySystemComponent)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ASC 없음"));
+        return;
+    }
+    FString TagString = BasicShotAbilityTag.ToString();
+    UE_LOG(LogTemp, Warning, TEXT("%s"), *TagString);
+    const bool bOk = AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(BasicShotAbilityTag), true);
+
     if (GEngine)
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("빵이예요~!")));
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, bOk ? FColor::Blue : FColor::Red, FString::Printf(TEXT("%s"), bOk ? TEXT("빵이예요~!") : TEXT("아니예요~!")));
 }
 
 UAbilitySystemComponent* ACharBase::GetAbilitySystemComponent() const

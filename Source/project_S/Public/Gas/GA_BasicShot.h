@@ -6,6 +6,8 @@
 #include "Abilities/GameplayAbility.h"
 #include "GA_BasicShot.generated.h"
 
+class AProjectileBase;
+
 /**
  * 
  */
@@ -39,4 +41,11 @@ public:
         const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo,
         bool bReplicateCancelAbility) override;
+
+protected:
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
+    TSubclassOf<AProjectileBase> ProjectileClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
+    float ProjectileSpeed = 2000.0f;
 };

@@ -34,5 +34,4 @@ protected:
     // 최대 체력
     UPROPERTY(BlueprintReadOnly, Category = "Attributes")
     FGameplayAttributeData MaxHP;
-
 };
