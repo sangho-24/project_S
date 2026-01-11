@@ -15,14 +15,18 @@ UCLASS()
 class PROJECT_S_API AMainPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	protected:
+protected:
 
 	/** Input Mapping Contexts */
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
 	TArray<UInputMappingContext*> DefaultMappingContexts;
 
-	protected:
+protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+
+public:
+	FVector GetMouseCursorLocation() const;
+
 };
 

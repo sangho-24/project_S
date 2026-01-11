@@ -8,8 +8,11 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "AbilitySystemComponent.h"
-#include "Kismet/KismetSystemLibrary.h" // 추가
+#include "Kismet/KismetSystemLibrary.h"
 #include "Gas/ArenaAttributeSet.h"
+#include "Input/MainPlayerController.h"
+#include "Abilities/GameplayAbilityTargetTypes.h"
+
 
 
 // Sets default values
@@ -44,6 +47,9 @@ ACharBase::ACharBase()
     // Sphere에 물리 적용
     Sphere->SetSimulatePhysics(true);
     Sphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    Sphere->SetCollisionObjectType(ECC_Pawn);
+    Sphere->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+    Sphere->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
     Sphere->SetMassOverrideInKg(NAME_None, 300.0f, true);
 
     // 카메라 루트를 Sphere에 부착
@@ -267,9 +273,6 @@ void ACharBase::Jump(const FInputActionValue &Value)
     }
     
     const bool bOk = AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(JumpAbilityTag),true);
-    if (GEngine)
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, bOk ? FColor::Blue : FColor::Red, FString::Printf(TEXT("쩜프 %s"), bOk ? TEXT("띠용") : TEXT("실패")));
-    UE_LOG(LogTemp, Warning, TEXT("쩜프 %s"), bOk ? TEXT("띠용") : TEXT("실패"));
     FString TagString = JumpAbilityTag.ToString();
     UE_LOG(LogTemp, Warning, TEXT("%s"), *TagString);
 }
@@ -281,12 +284,35 @@ void ACharBase::BasicShot(const FInputActionValue& Value)
         UE_LOG(LogTemp, Warning, TEXT("ASC 없음"));
         return;
     }
+    UE_LOG(LogTemp, Warning, TEXT("샷 호출"));
+    APlayerController* PC = Cast<APlayerController>(GetController());
+    if (PC)
+    {
+        MouseCursorLocation = Cast<AMainPlayerController>(PC)->GetMouseCursorLocation();
+    }
+
+
+    // EventData 생성
+    FGameplayEventData EventData;
+
+    // ContextHandle을 통해 위치 전달
+    FGameplayAbilityTargetingLocationInfo TargetLocationInfo;
+    TargetLocationInfo.LocationType = EGameplayAbilityTargetingLocationType::LiteralTransform;
+    TargetLocationInfo.LiteralTransform = FTransform(MouseCursorLocation);
+
+    // TargetData를 수동으로 생성
+    FGameplayAbilityTargetDataHandle TargetDataHandle;
+    FGameplayAbilityTargetData_LocationInfo* LocationData = new FGameplayAbilityTargetData_LocationInfo();
+    LocationData->TargetLocation = TargetLocationInfo;
+
+    TargetDataHandle.Add(LocationData);
+    EventData.TargetData = TargetDataHandle;
+
     FString TagString = BasicShotAbilityTag.ToString();
     UE_LOG(LogTemp, Warning, TEXT("%s"), *TagString);
-    const bool bOk = AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(BasicShotAbilityTag), true);
 
-    if (GEngine)
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, bOk ? FColor::Blue : FColor::Red, FString::Printf(TEXT("%s"), bOk ? TEXT("빵이예요~!") : TEXT("아니예요~!")));
+    // HandleGameplayEvent 호출
+    AbilitySystemComponent->HandleGameplayEvent(BasicShotAbilityTag, &EventData);
 }
 
 UAbilitySystemComponent* ACharBase::GetAbilitySystemComponent() const

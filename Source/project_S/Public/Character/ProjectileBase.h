@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "ProjectileBase.generated.h"
 
+#define ECC_Projectile ECC_GameTraceChannel1
+
 class USphereComponent;
 class UStaticMeshComponent;
 class UProjectileMovementComponent;
@@ -30,11 +32,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UProjectileMovementComponent* ProjectileMovement;
 
-	// ����
-	UPROPERTY(BlueprintReadOnly, Category = "Projectile")
+	// 값들
+	UPROPERTY(ReplicatedUsing = OnRep_Damage, BlueprintReadOnly, Category = "Projectile")
 	float Damage = 10.0f;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Projectile")
+	UPROPERTY(ReplicatedUsing = OnRep_Speed, BlueprintReadOnly, Category = "Projectile")
 	float Speed = 2000.0f;
 
 public:
@@ -44,8 +46,11 @@ public:
 
 public:	
 	virtual void Tick(float DeltaTime) override;
-	
-	// �� ���� �Լ�
+
+	// 네트워크 복제 설정
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	// 값 설정 함수
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
 	void SetDamage(float NewDamage);
 
@@ -58,9 +63,22 @@ public:
 	FORCEINLINE float GetDamage() const { return Damage; }
 
 protected:
-	// ��Ʈ �̺�Ʈ
+	// 리플리케이션 콜백
+	UFUNCTION()
+	void OnRep_Damage();
+
+	UFUNCTION()
+	void OnRep_Speed();
+
+	// 히트 이벤트
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+
 
 };

@@ -10,22 +10,30 @@ UGA_BasicShot::UGA_BasicShot()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerInitiated;
+	//AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(TEXT("Ability.BasicShot")));
 	SetAssetTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag(TEXT("Ability.BasicShot"))));
+	// HandleGameplayEvent ì–´ë¹Œë¦¬í‹°ëŠ” íŠ¸ë¦¬ê±° íƒœê·¸ê°€ í•„ìš”í•¨
+	FAbilityTriggerData TriggerData;
+	TriggerData.TriggerTag = FGameplayTag::RequestGameplayTag(TEXT("Ability.BasicShot"));
+	TriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
+	AbilityTriggers.Add(TriggerData);
 }
 
 void UGA_BasicShot::ActivateAbility(
-	const FGameplayAbilitySpecHandle Handle, 
-	const FGameplayAbilityActorInfo* ActorInfo, 
-	const FGameplayAbilityActivationInfo ActivationInfo, 
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
+	UE_LOG(LogTemp, Warning, TEXT("ì•¡í‹°ë² ì´íŠ¸ ì–´ë¹Œë¦¬í‹°"));
+
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
 
-	// ¼­¹ö¿¡¼­¸¸ ½ÇÇà
+	// ì„œë²„ì—ì„œë§Œ ì‹¤í–‰
 	if (!HasAuthority(&ActivationInfo))
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
@@ -35,7 +43,7 @@ void UGA_BasicShot::ActivateAbility(
 	ACharBase* Character = Cast<ACharBase>(ActorInfo->AvatarActor.Get());
 	if (!Character)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Ä³¸¯ÅÍ ¾øÀ½"));
+		UE_LOG(LogTemp, Warning, TEXT("ìºë¦­í„° ì—†ìŒ"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
@@ -43,21 +51,41 @@ void UGA_BasicShot::ActivateAbility(
 	UArenaAttributeSet* AttributeSet = Character->GetAttributeSet();
 	if (!AttributeSet)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AttributeSet ¾øÀ½"));
+		UE_LOG(LogTemp, Warning, TEXT("AttributeSet ì—†ìŒ"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
 
-	// Attribute¿¡¼­ °ø°İ·Â °¡Á®¿À±â
-	float AttackPower = 5.f;
+	// Attributeì—ì„œ ê³µê²©ë ¥ ê°€ì ¸ì˜¤ê¸°
+	//float ProjectileDamage = 5.f;
+	//float ProjectileSpeed = 1000.f;
 
-	// Åõ»çÃ¼ À§Ä¡, È¸Àü °è»ê (¼öÁ¤ ÇÊ¿ä)
-	FVector CharLocation = Character->GetActorLocation();
-	FVector ForwardVector = Character->GetActorForwardVector();
-	FVector SpawnLocation = CharLocation;
-	FRotator SpawnRotation = ForwardVector.Rotation();
+	// EventDataì—ì„œ ë§ˆìš°ìŠ¤ ìœ„ì¹˜ ê°€ì ¸ì˜¤ê¸°
+	FVector MouseCursorLocation = FVector::ZeroVector;
+	if (TriggerEventData && TriggerEventData->TargetData.IsValid(0))
+	{
+		const FGameplayAbilityTargetData* TargetData = TriggerEventData->TargetData.Get(0);
+		if (TargetData)
+		{
+			const FGameplayAbilityTargetData_LocationInfo* LocationData =
+				static_cast<const FGameplayAbilityTargetData_LocationInfo*>(TargetData);
 
-	// Åõ»çÃ¼ ½ºÆù
+			if (LocationData)
+			{
+				// TargetLocationì—ì„œ ìœ„ì¹˜ ì¶”ì¶œ
+				FTransform TargetTransform = LocationData->TargetLocation.GetTargetingTransform();
+				MouseCursorLocation = TargetTransform.GetLocation();
+			}
+		}
+	}
+
+	// íˆ¬ì‚¬ì²´ ìœ„ì¹˜, íšŒì „ ê³„ì‚°
+	FVector SpawnLocation = Character->GetActorLocation();
+	MouseCursorLocation.Z = SpawnLocation.Z;
+	FVector Direction = (MouseCursorLocation - SpawnLocation).GetSafeNormal();
+	FRotator SpawnRotation = Direction.Rotation();
+	
+	// íˆ¬ì‚¬ì²´ ìŠ¤í°
 	if (ProjectileClass)
 	{
 		FActorSpawnParameters SpawnParams;
@@ -70,21 +98,21 @@ void UGA_BasicShot::ActivateAbility(
 
 		if (Projectile)
 		{
-			Projectile->SetDamage(AttackPower);
+			Projectile->SetDamage(ProjectileDamage);
 			Projectile->SetSpeed(ProjectileSpeed);
-			Projectile->Launch(ForwardVector);
+			Projectile->Launch(Direction);
 
-			UE_LOG(LogTemp, Warning, TEXT("Åõ»çÃ¼ ¹ß»ç ¼º°ø! µ¥¹ÌÁö: %.1f, ¼Óµµ: %.1f"),
-				AttackPower, ProjectileSpeed);
+			UE_LOG(LogTemp, Warning, TEXT("íˆ¬ì‚¬ì²´ ë°œì‚¬ ì„±ê³µ! ë°ë¯¸ì§€: %.1f, ì†ë„: %.1f"),
+				ProjectileDamage, ProjectileSpeed);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("Åõ»çÃ¼ ½ºÆù ½ÇÆĞ!"));
+			UE_LOG(LogTemp, Error, TEXT("íˆ¬ì‚¬ì²´ ìŠ¤í° ì‹¤íŒ¨!"));
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("ProjectileClass°¡ ¼³Á¤µÇÁö ¾ÊÀ½!"));
+		UE_LOG(LogTemp, Error, TEXT("ProjectileClassê°€ ì„¤ì •ë˜ì§€ ì•ŠìŒ!"));
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
@@ -102,7 +130,7 @@ bool UGA_BasicShot::CanActivateAbility(
 		return false;
 	}
 
-	// Á×¾úÀ¸¸é ¹ß»ç ºÒ°¡
+	// ì£½ì—ˆìœ¼ë©´ ë°œì‚¬ ë¶ˆê°€
 	//ACharBase* Character = Cast<ACharBase>(ActorInfo->AvatarActor.Get());
 	//if (Character && Character->IsDead())
 	//{

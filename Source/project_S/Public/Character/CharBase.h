@@ -8,6 +8,8 @@
 #include "Abilities/GameplayAbility.h"
 #include "CharBase.generated.h"
 
+#define ECC_Projectile ECC_GameTraceChannel1
+
 class USpringArmComponent;
 class UCameraComponent;
 class UStaticMeshComponent;
@@ -53,6 +55,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
 	FGameplayTag BasicShotAbilityTag;
+
+	FVector MouseCursorLocation;
 
 // 인풋 액션
 protected:
@@ -109,9 +113,11 @@ protected:
 	UFUNCTION(Server, Unreliable)
 	void ServerMoveCompleted();
 
+
 public:
 	FORCEINLINE UPrimitiveComponent* GetPhysicsComponent() const { return Sphere; }
 	FORCEINLINE UArenaAttributeSet* GetAttributeSet() const { return AttributeSet; }
+	FORCEINLINE FVector GetMouseCursorLocation() const { return MouseCursorLocation; }
 
 private:
     void InitializeAbilitySystem();

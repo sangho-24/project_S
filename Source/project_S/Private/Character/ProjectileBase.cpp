@@ -2,6 +2,8 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Net/UnrealNetwork.h"
+
 
 // Sets default values
 AProjectileBase::AProjectileBase()
@@ -9,16 +11,18 @@ AProjectileBase::AProjectileBase()
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
-	// Äİ¸®Àü ÄÄÆ÷³ÍÆ®
+	// ì½œë¦¬ì „ ì»´í¬ë„ŒíŠ¸
 	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
 	CollisionComponent->InitSphereRadius(15.0f);
 	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Block);
+	CollisionComponent->SetCollisionObjectType(ECC_Projectile);
 	CollisionComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	CollisionComponent->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+	CollisionComponent->SetGenerateOverlapEvents(true);
 	RootComponent = CollisionComponent;
 
-	// ¸Ş½Ã ÄÄÆ÷³ÍÆ®
+	// ë©”ì‹œ ì»´í¬ë„ŒíŠ¸
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	MeshComponent->SetupAttachment(CollisionComponent);
 	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -29,7 +33,7 @@ AProjectileBase::AProjectileBase()
 		MeshComponent->SetRelativeScale3D(FVector(0.3f, 0.3f, 0.3f));
 	}
 
-	// ÇÁ·ÎÁ§Å¸ÀÏ ¹«ºê¸ÕÆ® ÄÄÆ÷³ÍÆ®
+	// í”„ë¡œì íƒ€ì¼ ë¬´ë¸Œë¨¼íŠ¸ ì»´í¬ë„ŒíŠ¸
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = CollisionComponent;
 	ProjectileMovement->InitialSpeed = Speed;
@@ -38,17 +42,29 @@ AProjectileBase::AProjectileBase()
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.0f;
 
-	// ¼ö¸í
+	// ìˆ˜ëª…
 	InitialLifeSpan = LifeSpan;
+}
+
+void AProjectileBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AProjectileBase, Damage);
+	DOREPLIFETIME(AProjectileBase, Speed);
 }
 
 void AProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
-	// È÷Æ® ÀÌº¥Æ® ¹ÙÀÎµù
 	if (CollisionComponent)
 	{
 		CollisionComponent->OnComponentHit.AddDynamic(this, &AProjectileBase::OnHit);
+		CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AProjectileBase::OnOverlapBegin);
+		if (AActor* OwnerActor = GetOwner())
+		{
+			CollisionComponent->IgnoreActorWhenMoving(OwnerActor, true);
+		}
 	}
 }
 
@@ -82,25 +98,55 @@ void AProjectileBase::Launch(const FVector& Direction)
 	}
 }
 
+void AProjectileBase::OnRep_Damage()
+{
+}
+
+void AProjectileBase::OnRep_Speed()
+{
+	if (ProjectileMovement)
+	{
+		ProjectileMovement->InitialSpeed = Speed;
+		ProjectileMovement->MaxSpeed = Speed;
+	}
+}
+
 void AProjectileBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// ¹ß»çÇÑ Ä³¸¯ÅÍ´Â ¹«½Ã
 	if (OtherActor == GetOwner())
 	{
 		return;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("íˆ¬ì‚¬ì²´ê°€ ë²½ì— ì¶©ëŒ! ëŒ€ìƒ: %s"), *OtherActor->GetName());
+	Destroy();
+}
 
-	UE_LOG(LogTemp, Warning, TEXT("Åõ»çÃ¼ È÷Æ®! ´ë»ó: %s, µ¥¹ÌÁö: %.1f"),
-		*OtherActor->GetName(), Damage);
+void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	// Owner ì²´í¬ (ì¤‘ìš”!)
+	if (OtherActor == GetOwner())
+	{
+		UE_LOG(LogTemp, Log, TEXT("ìì‹ ì˜ ë°œì‚¬ì²´ ë¬´ì‹œ: %s"), *OtherActor->GetName());
+		return;
+	}
 
-	// TODO: µ¥¹ÌÁö Àû¿ë (GameplayEffect »ç¿ë)
+	if (!HasAuthority())
+	{
+		UE_LOG(LogTemp, Log, TEXT("ì„œë²„ì—ì„œë§Œ ì²˜ë¦¬!!!"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("íˆ¬ì‚¬ì²´ ì˜¤ë²„ë©! Owner: %s, ëŒ€ìƒ: %s, ë°ë¯¸ì§€: %.1f"),
+		GetOwner() ? *GetOwner()->GetName() : TEXT("None"), *OtherActor->GetName(), Damage);
+
+	// TODO: ë°ë¯¸ì§€ ì ìš© (GameplayEffect ì‚¬ìš©)
 	// ACharBase* HitCharacter = Cast<ACharBase>(OtherActor);
 	// if (HitCharacter)
 	// {
 	//     ApplyDamageEffect(HitCharacter);
 	// }
 
-	// Åõ»çÃ¼ ÆÄ±«
 	Destroy();
 }

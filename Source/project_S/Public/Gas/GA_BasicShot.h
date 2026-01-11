@@ -48,4 +48,7 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
     float ProjectileSpeed = 2000.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
+    float ProjectileDamage = 3.0f;
 };
