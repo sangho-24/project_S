@@ -3,6 +3,9 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "GameplayEffect.h"
 
 
 // Sets default values
@@ -125,10 +128,9 @@ void AProjectileBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	// Owner 체크 (중요!)
 	if (OtherActor == GetOwner())
 	{
-		UE_LOG(LogTemp, Log, TEXT("자신의 발사체 무시: %s"), *OtherActor->GetName());
+		UE_LOG(LogTemp, Log, TEXT("자신의 발사체 무시"));
 		return;
 	}
 
@@ -141,12 +143,32 @@ void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, A
 	UE_LOG(LogTemp, Warning, TEXT("투사체 오버랩! Owner: %s, 대상: %s, 데미지: %.1f"),
 		GetOwner() ? *GetOwner()->GetName() : TEXT("None"), *OtherActor->GetName(), Damage);
 
-	// TODO: 데미지 적용 (GameplayEffect 사용)
-	// ACharBase* HitCharacter = Cast<ACharBase>(OtherActor);
-	// if (HitCharacter)
-	// {
-	//     ApplyDamageEffect(HitCharacter);
-	// }
+	// GAS 데미지 적용
+	if (OtherActor && DamageEffect)
+	{	// 대상 ASC 가져오기
+		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
+		if (TargetASC)
+		{
+			// 공격자 ASC 가져오기
+			UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+			// Context 생성(공격자 ASC우선, 없으면 타겟ASC에 생성)
+			FGameplayEffectContextHandle ContextHandle = SourceASC ? SourceASC->MakeEffectContext() : TargetASC->MakeEffectContext();
+			ContextHandle.AddHitResult(SweepResult);
+			ContextHandle.AddInstigator(GetOwner(), this);
 
+			// Spec 생성
+			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(DamageEffect, 1.0f, ContextHandle);
+
+			if (SpecHandle.IsValid())
+			{
+				FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(TEXT("Data.Damage"));
+				SpecHandle.Data.Get()->SetSetByCallerMagnitude(DamageTag, Damage);
+
+				// GE 적용
+				TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+				UE_LOG(LogTemp, Warning, TEXT("투사체 적중! 대상: %s, 데미지: %.1f"), *OtherActor->GetName(), Damage);
+			}
+		}
+	}
 	Destroy();
 }

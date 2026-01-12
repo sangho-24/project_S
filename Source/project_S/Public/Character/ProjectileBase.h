@@ -11,6 +11,7 @@
 class USphereComponent;
 class UStaticMeshComponent;
 class UProjectileMovementComponent;
+class UGameplayEffect;
 
 UCLASS()
 class PROJECT_S_API AProjectileBase : public AActor
@@ -42,6 +43,9 @@ protected:
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
 	float LifeSpan = 5.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
+	TSubclassOf<UGameplayEffect> DamageEffect;
 
 
 public:	
