@@ -25,8 +25,6 @@ void UGA_BasicShot::ActivateAbility(
 	const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
-	UE_LOG(LogTemp, Warning, TEXT("액티베이트 어빌리티"));
-
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -101,9 +99,6 @@ void UGA_BasicShot::ActivateAbility(
 			Projectile->SetDamage(ProjectileDamage);
 			Projectile->SetSpeed(ProjectileSpeed);
 			Projectile->Launch(Direction);
-
-			UE_LOG(LogTemp, Warning, TEXT("투사체 발사 성공! 데미지: %.1f, 속도: %.1f"),
-				ProjectileDamage, ProjectileSpeed);
 		}
 		else
 		{

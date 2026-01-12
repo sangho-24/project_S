@@ -24,14 +24,27 @@ class PROJECT_S_API UArenaAttributeSet : public UAttributeSet
 public:
     UArenaAttributeSet();
 
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+    virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+    virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+
     ATTRIBUTE_ACCESSORS(UArenaAttributeSet, CurrentHP)
     ATTRIBUTE_ACCESSORS(UArenaAttributeSet, MaxHP)
+
 protected:
-    // ÇöÀç Ã¼·Â
-    UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+    // í˜„ìž¬ ì²´ë ¥
+    UPROPERTY(ReplicatedUsing = OnRep_CurrentHP, BlueprintReadOnly, Category = "Attributes")
     FGameplayAttributeData CurrentHP;
 
-    // ÃÖ´ë Ã¼·Â
-    UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+    // ìµœëŒ€ ì²´ë ¥
+    UPROPERTY(ReplicatedUsing = OnRep_MaxHP, BlueprintReadOnly, Category = "Attributes")
     FGameplayAttributeData MaxHP;
+
+protected:
+    UFUNCTION()
+    void OnRep_CurrentHP(const FGameplayAttributeData& OldCurrentHP);
+
+    UFUNCTION()
+    void OnRep_MaxHP(const FGameplayAttributeData& OldMaxHP);
 };

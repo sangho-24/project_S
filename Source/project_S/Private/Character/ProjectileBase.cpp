@@ -130,18 +130,13 @@ void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, A
 {
 	if (OtherActor == GetOwner())
 	{
-		UE_LOG(LogTemp, Log, TEXT("자신의 발사체 무시"));
 		return;
 	}
 
 	if (!HasAuthority())
 	{
-		UE_LOG(LogTemp, Log, TEXT("서버에서만 처리!!!"));
 		return;
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("투사체 오버랩! Owner: %s, 대상: %s, 데미지: %.1f"),
-		GetOwner() ? *GetOwner()->GetName() : TEXT("None"), *OtherActor->GetName(), Damage);
 
 	// GAS 데미지 적용
 	if (OtherActor && DamageEffect)
@@ -162,7 +157,7 @@ void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, A
 			if (SpecHandle.IsValid())
 			{
 				FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(TEXT("Data.Damage"));
-				SpecHandle.Data.Get()->SetSetByCallerMagnitude(DamageTag, Damage);
+				SpecHandle.Data.Get()->SetSetByCallerMagnitude(DamageTag, -Damage);
 
 				// GE 적용
 				TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());

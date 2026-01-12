@@ -110,13 +110,6 @@ void ACharBase::InitializeAbilitySystem()
 {
     AbilitySystemComponent->InitAbilityActorInfo(this, this);
     GiveStartingAbilities();
-    // Attribute 값 확인
-    if (AttributeSet && GEngine && IsLocallyControlled())
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow,
-            FString::Printf(TEXT("CurrentHP: %.1f / MaxHP: %.1f"),
-                AttributeSet->GetCurrentHP(), AttributeSet->GetMaxHP()));
-    }
 }
 
 void ACharBase::GiveStartingAbilities()
@@ -272,9 +265,7 @@ void ACharBase::Jump(const FInputActionValue &Value)
         return;
     }
     
-    const bool bOk = AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(JumpAbilityTag),true);
-    FString TagString = JumpAbilityTag.ToString();
-    UE_LOG(LogTemp, Warning, TEXT("%s"), *TagString);
+    AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(JumpAbilityTag),true);
 }
 
 void ACharBase::BasicShot(const FInputActionValue& Value)
@@ -284,7 +275,6 @@ void ACharBase::BasicShot(const FInputActionValue& Value)
         UE_LOG(LogTemp, Warning, TEXT("ASC 없음"));
         return;
     }
-    UE_LOG(LogTemp, Warning, TEXT("샷 호출"));
     APlayerController* PC = Cast<APlayerController>(GetController());
     if (PC)
     {
@@ -307,9 +297,6 @@ void ACharBase::BasicShot(const FInputActionValue& Value)
 
     TargetDataHandle.Add(LocationData);
     EventData.TargetData = TargetDataHandle;
-
-    FString TagString = BasicShotAbilityTag.ToString();
-    UE_LOG(LogTemp, Warning, TEXT("%s"), *TagString);
 
     // HandleGameplayEvent 호출
     AbilitySystemComponent->HandleGameplayEvent(BasicShotAbilityTag, &EventData);
