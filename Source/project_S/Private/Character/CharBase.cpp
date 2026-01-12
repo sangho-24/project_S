@@ -110,6 +110,10 @@ void ACharBase::InitializeAbilitySystem()
 {
     AbilitySystemComponent->InitAbilityActorInfo(this, this);
     GiveStartingAbilities();
+    if (AMainPlayerController* PC = Cast<AMainPlayerController>(GetController()))
+    {
+        PC->CreateHUD();
+    }
 }
 
 void ACharBase::GiveStartingAbilities()
