@@ -12,6 +12,8 @@
 #include "Gas/ArenaAttributeSet.h"
 #include "Input/MainPlayerController.h"
 #include "Abilities/GameplayAbilityTargetTypes.h"
+#include "Components/WidgetComponent.h"
+#include "Widget/FloatingHPBarWidget.h"
 
 
 
@@ -70,6 +72,11 @@ ACharBase::ACharBase()
     Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
     Camera->SetupAttachment(SpringArm);
     Camera->bUsePawnControlRotation = false;
+
+    // 위젯 컴포넌트 생성
+    HPBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarComponent"));
+    HPBarComponent->SetupAttachment(GetRootComponent());
+
 }
 
 // Called when the game starts or when spawned
@@ -114,6 +121,10 @@ void ACharBase::InitializeAbilitySystem()
     {
         PC->CreateHUD();
     }
+    if (HPBarComponent)
+    {
+        InitializeFloatingHPBar();
+    }
 }
 
 void ACharBase::GiveStartingAbilities()
@@ -130,6 +141,7 @@ void ACharBase::GiveStartingAbilities()
         }
     }
 }
+
 
 // Called every frame
 void ACharBase::Tick(float DeltaTime)
@@ -173,21 +185,21 @@ void ACharBase::ApplyHorizontalDamping(float DeltaTime)
         Sphere->AddTorqueInRadians(AngularDrag * DeltaTime, NAME_None, true);
     }
 
-    // 속도 표시
-    int32 UniqueKey = GetUniqueID();
-    int32 UniqueKey2 = GetUniqueID();
-    FString ModeString = HasAuthority() ? TEXT("리슨 서버") : TEXT("클라이언트");
-    if (GEngine && IsLocallyControlled())
-    {
-        GEngine->AddOnScreenDebugMessage(1, 5.f,
-            HasAuthority() ? FColor::Blue : FColor::Green,
-            FString::Printf(TEXT("%s 속도 %f / %f"),
-                *ModeString, CurrentVelocity.X, CurrentVelocity.Y));
-        GEngine->AddOnScreenDebugMessage(2, 5.f,
-            HasAuthority() ? FColor::Blue : FColor::Green,
-            FString::Printf(TEXT("%s CurrentInputVector %f / %f"),
-                *ModeString, CurrentInputVector.X, CurrentInputVector.Y));
-    }
+    //// 속도 표시
+    //int32 UniqueKey = GetUniqueID();
+    //int32 UniqueKey2 = GetUniqueID();
+    //FString ModeString = HasAuthority() ? TEXT("리슨 서버") : TEXT("클라이언트");
+    //if (GEngine && IsLocallyControlled())
+    //{
+    //    GEngine->AddOnScreenDebugMessage(1, 5.f,
+    //        HasAuthority() ? FColor::Blue : FColor::Green,
+    //        FString::Printf(TEXT("%s 속도 %f / %f"),
+    //            *ModeString, CurrentVelocity.X, CurrentVelocity.Y));
+    //    GEngine->AddOnScreenDebugMessage(2, 5.f,
+    //        HasAuthority() ? FColor::Blue : FColor::Green,
+    //        FString::Printf(TEXT("%s CurrentInputVector %f / %f"),
+    //            *ModeString, CurrentInputVector.X, CurrentInputVector.Y));
+    //}
 }
 
 // Called to bind functionality to input
@@ -309,4 +321,36 @@ void ACharBase::BasicShot(const FInputActionValue& Value)
 UAbilitySystemComponent* ACharBase::GetAbilitySystemComponent() const
 {
     return AbilitySystemComponent;
+}
+
+void ACharBase::InitializeFloatingHPBar()
+{
+    if (AbilitySystemComponent && AttributeSet)
+    {
+        HPBarComponent->InitWidget();
+        float CurrentHP = AttributeSet->GetCurrentHP();
+        float MaxHP = AttributeSet->GetMaxHP();
+        if (UFloatingHPBarWidget* HPWidget = Cast<UFloatingHPBarWidget>(HPBarComponent->GetUserWidgetObject()))
+        {
+            HPWidget->UpdateHP(CurrentHP, MaxHP);
+        }
+
+        AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+            AttributeSet->GetCurrentHPAttribute()).AddUObject(this, &ACharBase::OnHealthChanged);
+
+        AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+            AttributeSet->GetMaxHPAttribute()).AddUObject(this, &ACharBase::OnHealthChanged);
+    }
+}
+
+void ACharBase::OnHealthChanged(const FOnAttributeChangeData& Data)
+{
+    if (HPBarComponent)
+    {
+        UFloatingHPBarWidget* FloatingHPWidget = Cast<UFloatingHPBarWidget>(HPBarComponent->GetUserWidgetObject());
+        if (FloatingHPWidget && AttributeSet)
+        {
+            FloatingHPWidget->UpdateHP(AttributeSet->GetCurrentHP(), AttributeSet->GetMaxHP());
+        }
+    }
 }

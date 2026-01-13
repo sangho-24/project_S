@@ -33,8 +33,6 @@ void UArenaAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 	// CurrentHP 변경 시
 	if (Data.EvaluatedData.Attribute == GetCurrentHPAttribute())
 	{
-		// 서버 측 검증 및 사망 처리
-		// 로그 확인용: 타겟 액터가 존재하면 무조건 로그 찍도록 변경 (LocallyControlled 체크 제거)
 		if (AActor* TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("[서버] %s Take Damage! HP: %.1f / %.1f"),

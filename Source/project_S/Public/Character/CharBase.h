@@ -19,6 +19,7 @@ class APlayerController;
 class UInputAction;
 class UAbilitySystemComponent;
 class UArenaAttributeSet;
+class UWidgetComponent;
 
 UCLASS()
 class PROJECT_S_API ACharBase : public APawn, public IAbilitySystemInterface
@@ -55,6 +56,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
 	FGameplayTag BasicShotAbilityTag;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UWidgetComponent* HPBarComponent;
 
 	FVector MouseCursorLocation;
 
@@ -122,4 +126,7 @@ public:
 private:
     void InitializeAbilitySystem();
     void GiveStartingAbilities();
+	void InitializeFloatingHPBar();
+private:
+	void OnHealthChanged(const FOnAttributeChangeData& Data);
 };
