@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -90,6 +88,7 @@ public:
 // 임시 변수
 private:
     FVector2D CurrentInputVector;
+	bool bIsASCInitialized = false;
 
 // 오버라이드 함수
 protected:

@@ -17,8 +17,9 @@ public class project_S : ModuleRules
 			"EnhancedInput",
 			"GameplayAbilities",
 			"GameplayTags",
-			"GameplayTasks"
-			});
+			"GameplayTasks",
+            "Niagara"
+            });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 

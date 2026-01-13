@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GameplayTagContainer.h"
 #include "ProjectileBase.generated.h"
 
 #define ECC_Projectile ECC_GameTraceChannel1
@@ -39,6 +40,9 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Speed, BlueprintReadOnly, Category = "Projectile")
 	float Speed = 2000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	FGameplayTag CueTag;
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
@@ -83,6 +87,8 @@ protected:
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	// Gameplay Cue 실행 헬퍼
+	void ExecuteHitGameplayCue(AActor* TargetActor, const FHitResult& HitResult);
 
 
 };

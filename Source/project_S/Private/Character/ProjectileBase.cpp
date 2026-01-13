@@ -5,7 +5,10 @@
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemGlobals.h"
 #include "GameplayEffect.h"
+#include "GameplayCueManager.h"
+
 
 
 // Sets default values
@@ -69,6 +72,10 @@ void AProjectileBase::BeginPlay()
 			CollisionComponent->IgnoreActorWhenMoving(OwnerActor, true);
 		}
 	}
+	if (!CueTag.IsValid())
+	{
+		CueTag = FGameplayTag::RequestGameplayTag(TEXT("GameplayCue.Projectile.Hit"));
+	}
 }
 
 // Called every frame
@@ -121,8 +128,13 @@ void AProjectileBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	{
 		return;
 	}
+
+	ExecuteHitGameplayCue(OtherActor, Hit);
+	if (HasAuthority())
+	{
 	UE_LOG(LogTemp, Warning, TEXT("투사체가 벽에 충돌! 대상: %s"), *OtherActor->GetName());
 	Destroy();
+	}
 }
 
 void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -165,5 +177,46 @@ void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, A
 			}
 		}
 	}
+	// Gameplay Cue 실행
+	ExecuteHitGameplayCue(OtherActor, SweepResult);
 	Destroy();
+}
+
+void AProjectileBase::ExecuteHitGameplayCue(AActor* TargetActor, const FHitResult& HitResult)
+{
+	if (!TargetActor)
+	{
+		return;
+	}
+
+	// Gameplay Cue Parameters 설정
+	FGameplayCueParameters CueParams;
+	// HitResult가 없으면 실행시킨 투사체의 위치와 방향을 넣음
+	CueParams.Location = HitResult.ImpactPoint.IsZero() ? FVector(GetActorLocation()) : FVector(HitResult.ImpactPoint);
+	CueParams.Normal = HitResult.ImpactNormal.IsZero() ? FVector(GetActorForwardVector()) : FVector(HitResult.ImpactNormal);
+	CueParams.PhysicalMaterial = HitResult.PhysMaterial;
+	CueParams.Instigator = GetInstigator();
+	CueParams.EffectCauser = this;
+	// HitResult 설정 (EffectContext)
+	FGameplayEffectContextHandle ContextHandle = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
+	ContextHandle.AddHitResult(HitResult);
+	CueParams.EffectContext = ContextHandle;
+
+	// 대상이 ASC를 가지고 있으면 ASC를 통해 실행 (자동 복제)
+	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
+	if (TargetASC)
+	{
+		TargetASC->ExecuteGameplayCue(CueTag, CueParams);
+	}
+	else
+	{
+		// ASC가 없으면 GameplayCue Manager를 통해 실행
+		if (UWorld* World = GetWorld())
+		{
+			if (UGameplayCueManager* CueManager = UAbilitySystemGlobals::Get().GetGameplayCueManager())
+			{
+				CueManager->HandleGameplayCue(TargetActor, CueTag, EGameplayCueEvent::Executed, CueParams);
+			}
+		}
+	}
 }

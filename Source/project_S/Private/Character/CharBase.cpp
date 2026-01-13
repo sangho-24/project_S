@@ -91,6 +91,10 @@ void ACharBase::BeginPlay()
     {
         BasicShotAbilityTag = FGameplayTag::RequestGameplayTag(TEXT("Ability.BasicShot"));
     }
+    if (AbilitySystemComponent)
+    {
+        InitializeAbilitySystem();
+    }
 }
 
 // 서버에서만 호출
@@ -115,6 +119,10 @@ void ACharBase::OnRep_PlayerState()
 
 void ACharBase::InitializeAbilitySystem()
 {
+    if (bIsASCInitialized)
+    {
+        return;
+    }
     AbilitySystemComponent->InitAbilityActorInfo(this, this);
     GiveStartingAbilities();
     if (AMainPlayerController* PC = Cast<AMainPlayerController>(GetController()))
@@ -125,6 +133,7 @@ void ACharBase::InitializeAbilitySystem()
     {
         InitializeFloatingHPBar();
     }
+    bIsASCInitialized = true;
 }
 
 void ACharBase::GiveStartingAbilities()
