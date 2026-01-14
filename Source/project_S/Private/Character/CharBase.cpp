@@ -37,6 +37,9 @@ ACharBase::ACharBase()
     // AttributeSet 생성
     AttributeSet = CreateDefaultSubobject<UArenaAttributeSet>(TEXT("AttributeSet"));
 
+	// Inventory 생성
+    InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+    
     // Sphere를 RootComponent로 설정하고 물리 활성화
     Sphere = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Sphere"));
     RootComponent = Sphere;
@@ -76,6 +79,7 @@ ACharBase::ACharBase()
     // 위젯 컴포넌트 생성
     HPBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarComponent"));
     HPBarComponent->SetupAttachment(GetRootComponent());
+
 
 }
 

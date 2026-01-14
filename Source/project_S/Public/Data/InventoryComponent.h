@@ -5,7 +5,7 @@
 #include "Data/InventoryItem.h"
 #include "InventoryComponent.generated.h"
 
-class UAbilitySystemComponent
+class UAbilitySystemComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryUpdated, int32, SlotIndex, const FInventoryItem&, Item);
 

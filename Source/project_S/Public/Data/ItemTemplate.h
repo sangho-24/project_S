@@ -16,6 +16,21 @@ enum class EItemType : uint8
 	Consumable UMETA(DisplayName = "소비")
 };
 
+USTRUCT(BlueprintType)
+struct FPassiveGameplayEffect
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UGameplayEffect> EffectClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TArray<FGameplayTag> DataTag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float Value = 1.0f;
+};
+
 UCLASS()
 class PROJECT_S_API UItemTemplate : public UPrimaryDataAsset
 {
@@ -44,7 +59,8 @@ public:
 
 	// 장비 (스탯 증가)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
-	TArray<TSubclassOf<UGameplayEffect>> PassiveEffects;
+	//TArray<TSubclassOf<UGameplayEffect>> PassiveEffects;
+	TArray<FPassiveGameplayEffect> PassiveEffects;
 
 	// 소비 아이템용 - 사용 시 적용되는 이펙트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS|Consumable")

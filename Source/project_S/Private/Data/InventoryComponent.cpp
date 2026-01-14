@@ -86,6 +86,7 @@ bool UInventoryComponent::AddItem(UItemTemplate* ItemTemplate, int32 Count)
 			RemainingCount -= ItemTemplate->MaxStackCount;
 		}
 	}
+	return true;
 }
 
 bool UInventoryComponent::RemoveItem(int32 SlotIndex, int32 Count)
@@ -253,16 +254,20 @@ void UInventoryComponent::GrantItemAbilitiesAndEffects(FInventoryItem& Item)
 	}
 
 	// 패시브 이펙트 적용
-	for (TSubclassOf<UGameplayEffect> EffectClass : Item.ItemTemplate->PassiveEffects)
+	for (const FPassiveGameplayEffect& PassiveEffect : Item.ItemTemplate->PassiveEffects)
 	{
-		if (EffectClass)
+		if (PassiveEffect.EffectClass)
 		{
 			FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
 			ContextHandle.AddSourceObject(GetOwner());
 
-			FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(EffectClass, 1.0f, ContextHandle);
+			FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(PassiveEffect.EffectClass, 1.0f, ContextHandle);
 			if (SpecHandle.IsValid())
 			{
+				for (const FGameplayTag& Tag : PassiveEffect.DataTag)
+				{
+					SpecHandle.Data.Get()->SetSetByCallerMagnitude(Tag, PassiveEffect.Value);
+				}
 				FActiveGameplayEffectHandle ActiveHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 				Item.ActiveEffectHandles.Add(ActiveHandle);
 			}
