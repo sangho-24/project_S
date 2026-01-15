@@ -81,7 +81,6 @@ private:
 
 	// 헬퍼 함수
 	int32 FindEmptySlot() const;
-	int32 FindItemSlot(UItemTemplate* ItemTemplate) const;
 
 	UAbilitySystemComponent* GetOwnerASC() const;
 

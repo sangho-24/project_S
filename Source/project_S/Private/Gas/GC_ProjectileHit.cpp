@@ -16,7 +16,6 @@ bool UGC_ProjectileHit::OnExecute_Implementation(AActor* MyTarget, const FGamepl
 
 	FVector Location = Parameters.Location;
 	FRotator Rotation = Parameters.Normal.Rotation();
-
 	// HitResult가 있으면 그 정보 사용
 	if (Parameters.EffectContext.GetHitResult())
 	{

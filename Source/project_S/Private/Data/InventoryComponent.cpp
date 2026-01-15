@@ -41,50 +41,43 @@ bool UInventoryComponent::AddItem(UItemTemplate* ItemTemplate, int32 Count)
 	}
 
 	int32 RemainingCount = Count;
-	while (RemainingCount > 0)
-	{	// 스택 아이템이면 기존 슬롯에 추가
-		if (ItemTemplate->MaxStackCount > 1)
-		{
-			int32 ExistingSlot = FindItemSlot(ItemTemplate);
-			if (ExistingSlot != INDEX_NONE)
-			{
-				FInventoryItem& ExistingItem = InventoryItems[ExistingSlot];
-				int32 RemainingSpace = ItemTemplate->MaxStackCount - ExistingItem.StackCount;
 
-				if (RemainingSpace >= RemainingCount)
-				{
-					ExistingItem.StackCount += RemainingCount;
-					OnInventoryUpdated.Broadcast(ExistingSlot, ExistingItem);
-					return true;
-				}
-				else
-				{	// 일부만 스택에 추가하고 나머지는 새 슬롯에
-					ExistingItem.StackCount = ItemTemplate->MaxStackCount;
-					RemainingCount -= RemainingSpace;
-					OnInventoryUpdated.Broadcast(ExistingSlot, ExistingItem);
-				}
+	// 이미 존재하는 스택부터 채워보기
+	if (ItemTemplate->MaxStackCount > 1)
+	{
+		for (int32 i = 0; i < InventoryItems.Num() && RemainingCount > 0; ++i)
+		{
+			FInventoryItem& ExistingItem = InventoryItems[i];
+
+			if (ExistingItem.IsValid() &&
+				ExistingItem.ItemTemplate == ItemTemplate &&
+				ExistingItem.StackCount < ItemTemplate->MaxStackCount)
+			{
+				int32 RemainingSpace = ItemTemplate->MaxStackCount - ExistingItem.StackCount;
+				int32 AddCount = FMath::Min(RemainingSpace, RemainingCount);
+
+				ExistingItem.StackCount += AddCount;
+				RemainingCount -= AddCount;
+
+				OnInventoryUpdated.Broadcast(i, ExistingItem);
 			}
 		}
-		// 새 슬롯에 추가
+	}
+	// 2단계: 남은 아이템을 새 슬롯에 추가
+	while (RemainingCount > 0)
+	{
 		int32 EmptySlot = FindEmptySlot();
 		if (EmptySlot == INDEX_NONE)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("인벤토리 풀! %d개 추가 실패"), RemainingCount);
 			return false;
 		}
-		if (ItemTemplate->MaxStackCount >= RemainingCount)
-		{
-			InventoryItems[EmptySlot] = FInventoryItem(ItemTemplate, RemainingCount);
-			OnInventoryUpdated.Broadcast(EmptySlot, InventoryItems[EmptySlot]);
-			UE_LOG(LogTemp, Log, TEXT("아이템 추가: %s x%d"), *ItemTemplate->ItemName.ToString(), RemainingCount);
-			return true;
-		}
-		else
-		{
-			InventoryItems[EmptySlot] = FInventoryItem(ItemTemplate, ItemTemplate->MaxStackCount);
-			OnInventoryUpdated.Broadcast(EmptySlot, InventoryItems[EmptySlot]);
-			RemainingCount -= ItemTemplate->MaxStackCount;
-		}
+
+		int32 AddCount = FMath::Min(ItemTemplate->MaxStackCount, RemainingCount);
+		InventoryItems[EmptySlot] = FInventoryItem(ItemTemplate, AddCount);
+		RemainingCount -= AddCount;
+
+		OnInventoryUpdated.Broadcast(EmptySlot, InventoryItems[EmptySlot]);
 	}
 	return true;
 }
@@ -303,18 +296,6 @@ int32 UInventoryComponent::FindEmptySlot() const
 	for (int32 i = 0; i < InventoryItems.Num(); i++)
 	{
 		if (!InventoryItems[i].IsValid())
-		{
-			return i;
-		}
-	}
-	return INDEX_NONE;
-}
-
-int32 UInventoryComponent::FindItemSlot(UItemTemplate* ItemTemplate) const
-{
-	for (int32 i = 0; i < InventoryItems.Num(); i++)
-	{
-		if (InventoryItems[i].ItemTemplate == ItemTemplate)
 		{
 			return i;
 		}
