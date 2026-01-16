@@ -4,7 +4,7 @@
 
 UGC_ProjectileHit::UGC_ProjectileHit()
 {
-	GameplayCueTag = FGameplayTag::RequestGameplayTag(TEXT("GameplayCue.Projectile.Hit"));
+	// GameplayCueTag = FGameplayTag::RequestGameplayTag(TEXT("GameplayCue.Projectile.Hit"));
 }
 
 bool UGC_ProjectileHit::OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const

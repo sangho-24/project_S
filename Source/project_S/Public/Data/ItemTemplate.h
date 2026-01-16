@@ -17,7 +17,7 @@ enum class EItemType : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FPassiveGameplayEffect
+struct FGameplayEffectValue
 {
 	GENERATED_BODY()
 
@@ -25,11 +25,12 @@ struct FPassiveGameplayEffect
 	TSubclassOf<UGameplayEffect> EffectClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TArray<FGameplayTag> DataTag;
+	FGameplayTag DataTag;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float Value = 1.0f;
 };
+
 
 UCLASS()
 class PROJECT_S_API UItemTemplate : public UPrimaryDataAsset
@@ -60,11 +61,11 @@ public:
 	// 장비 (스탯 증가)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
 	//TArray<TSubclassOf<UGameplayEffect>> PassiveEffects;
-	TArray<FPassiveGameplayEffect> PassiveEffects;
+	TArray<FGameplayEffectValue> EquipmentEffects;
 
 	// 소비 아이템용 - 사용 시 적용되는 이펙트
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS|Consumable")
-	TSubclassOf<UGameplayEffect> ConsumeEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
+	TArray<FGameplayEffectValue> ConsumeEffects;
 
 	// 최대 스택 수
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")

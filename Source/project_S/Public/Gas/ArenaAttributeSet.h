@@ -28,6 +28,7 @@ public:
 
     virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
     virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+    virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
     ATTRIBUTE_ACCESSORS(UArenaAttributeSet, CurrentHP)
     ATTRIBUTE_ACCESSORS(UArenaAttributeSet, MaxHP)
@@ -40,6 +41,9 @@ protected:
     // 최대 체력
     UPROPERTY(ReplicatedUsing = OnRep_MaxHP, BlueprintReadOnly, Category = "Attributes")
     FGameplayAttributeData MaxHP;
+
+private:
+    float CachedHPPercent = 1.0f;
 
 protected:
     UFUNCTION()

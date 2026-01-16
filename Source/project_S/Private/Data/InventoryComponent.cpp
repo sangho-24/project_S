@@ -147,19 +147,21 @@ bool UInventoryComponent::UseItem(int32 SlotIndex)
 
 	case EItemType::Consumable:
 		// 소비 아이템 - 이펙트 적용 후 제거
-		if (ItemTemplate->ConsumeEffect && GetOwnerASC())
+		UAbilitySystemComponent* ASC = GetOwnerASC();
+		for (const FGameplayEffectValue& ConsumeEffect : Item.ItemTemplate->ConsumeEffects)
 		{
-			FGameplayEffectContextHandle ContextHandle = GetOwnerASC()->MakeEffectContext();
-			ContextHandle.AddSourceObject(GetOwner());
-			
-			FGameplayEffectSpecHandle SpecHandle = GetOwnerASC()->MakeOutgoingSpec(
-				ItemTemplate->ConsumeEffect, 1.0f, ContextHandle);
-			
-			if (SpecHandle.IsValid())
+			if (ConsumeEffect.EffectClass)
 			{
-				GetOwnerASC()->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-				RemoveItem(SlotIndex, 1);
-				UE_LOG(LogTemp, Log, TEXT("소비 아이템 사용: %s"), *ItemTemplate->ItemName.ToString());
+				FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
+				ContextHandle.AddSourceObject(GetOwner());
+
+				FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(ConsumeEffect.EffectClass, 1.0f, ContextHandle);
+				if (SpecHandle.IsValid())
+				{
+					SpecHandle.Data.Get()->SetSetByCallerMagnitude(ConsumeEffect.DataTag, ConsumeEffect.Value);
+					FActiveGameplayEffectHandle ActiveHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+					RemoveItem(SlotIndex, 1);
+				}
 			}
 		}
 		break;
@@ -247,20 +249,17 @@ void UInventoryComponent::GrantItemAbilitiesAndEffects(FInventoryItem& Item)
 	}
 
 	// 패시브 이펙트 적용
-	for (const FPassiveGameplayEffect& PassiveEffect : Item.ItemTemplate->PassiveEffects)
+	for (const FGameplayEffectValue& EquipmentEffect : Item.ItemTemplate->EquipmentEffects)
 	{
-		if (PassiveEffect.EffectClass)
+		if (EquipmentEffect.EffectClass)
 		{
 			FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
 			ContextHandle.AddSourceObject(GetOwner());
 
-			FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(PassiveEffect.EffectClass, 1.0f, ContextHandle);
+			FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(EquipmentEffect.EffectClass, 1.0f, ContextHandle);
 			if (SpecHandle.IsValid())
 			{
-				for (const FGameplayTag& Tag : PassiveEffect.DataTag)
-				{
-					SpecHandle.Data.Get()->SetSetByCallerMagnitude(Tag, PassiveEffect.Value);
-				}
+				SpecHandle.Data.Get()->SetSetByCallerMagnitude(EquipmentEffect.DataTag, EquipmentEffect.Value);
 				FActiveGameplayEffectHandle ActiveHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 				Item.ActiveEffectHandles.Add(ActiveHandle);
 			}

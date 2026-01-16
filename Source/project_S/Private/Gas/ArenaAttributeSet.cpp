@@ -25,6 +25,10 @@ void UArenaAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute,
 	{
 		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxHP());
 	}
+	else if (Attribute == GetMaxHPAttribute())
+	{
+		CachedHPPercent = GetCurrentHP() / GetMaxHP();
+	}
 }
 
 void UArenaAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
@@ -44,6 +48,18 @@ void UArenaAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 					// 여기서 Character->Death() 호출
 				}
 		}
+	}
+}
+
+void UArenaAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+{
+	Super::PostAttributeChange(Attribute, OldValue, NewValue);
+
+	// 최대체력 변경 후 비율에 맞춰 현재체력 재설정
+	if (Attribute == GetMaxHPAttribute())
+	{
+		SetCurrentHP(GetMaxHP() * CachedHPPercent);
+		UE_LOG(LogTemp, Warning, TEXT("MaxHP changed. CurrentHP adjusted to %.1f"), GetCurrentHP());
 	}
 }
 
