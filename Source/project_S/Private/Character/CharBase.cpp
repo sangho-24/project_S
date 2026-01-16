@@ -304,12 +304,12 @@ void ACharBase::BasicShot(const FInputActionValue& Value)
         UE_LOG(LogTemp, Warning, TEXT("ASC 없음"));
         return;
     }
+
     APlayerController* PC = Cast<APlayerController>(GetController());
     if (PC)
     {
         MouseCursorLocation = Cast<AMainPlayerController>(PC)->GetMouseCursorLocation();
     }
-
 
     // EventData 생성
     FGameplayEventData EventData;

@@ -168,7 +168,7 @@ void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, A
 			if (SpecHandle.IsValid())
 			{
 				FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(TEXT("Data.Damage"));
-				SpecHandle.Data.Get()->SetSetByCallerMagnitude(DamageTag, -Damage);
+				SpecHandle.Data.Get()->SetSetByCallerMagnitude(DamageTag, Damage);
 
 				// GE 적용
 				TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
