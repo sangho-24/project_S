@@ -172,7 +172,6 @@ void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, A
 
 				// GE 적용
 				TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-				UE_LOG(LogTemp, Warning, TEXT("투사체 적중! 대상: %s, 데미지: %.1f"), *OtherActor->GetName(), Damage);
 			}
 		}
 	}

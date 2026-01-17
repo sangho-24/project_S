@@ -41,8 +41,8 @@ float UMMC_BasicDamageCalculation::CalculateBaseMagnitude_Implementation(const F
 	float DamageMultiplier = FMath::Clamp(1.0f - DamageReduction, 0.0f, 1.0f);
 	float FinalDamage = FMath::Max((BaseDamage + AttackPower) * DamageMultiplier, 1.0f);
 
-	UE_LOG(LogTemp, Log, TEXT("기본 데미지 %.1f, 공격력 %.1f, 대상 방어력 %.1f, 데미지 감소율 %.1f (데미지 감소 %.1f -> %.1f)"),
-		BaseDamage, AttackPower, Defense, DamageReduction, (BaseDamage + AttackPower), FinalDamage);
+	UE_LOG(LogTemp, Log, TEXT("기본 데미지 %.0f, 공격력 %.0f, 대상 방어력 %.0f, 데미지 감소율 %.0f%% (데미지 감소 %.1f -> %.1f)"),
+		BaseDamage, AttackPower, Defense, DamageReduction*100, (BaseDamage + AttackPower), FinalDamage);
 
 	return -FinalDamage;
 }
