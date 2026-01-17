@@ -38,7 +38,14 @@ void AMainPlayerController::CreateHUD()
                     ASC->GetGameplayAttributeValueChangeDelegate(
                         AttributeSet->GetMaxHPAttribute()).AddUObject(
                             this, &AMainPlayerController::OnHealthChanged);
+					ASC->GetGameplayAttributeValueChangeDelegate(
+						AttributeSet->GetAttackPowerAttribute()).AddUObject(
+							this, &AMainPlayerController::OnStatsChanged);
+					ASC->GetGameplayAttributeValueChangeDelegate(
+						AttributeSet->GetDefenseAttribute()).AddUObject(
+							this, &AMainPlayerController::OnStatsChanged);
                     HUDWidget->UpdateHP(AttributeSet->GetCurrentHP(), AttributeSet->GetMaxHP());
+                    HUDWidget->UpdateStats(AttributeSet);
                 }
             }
         }
@@ -136,14 +143,41 @@ void AMainPlayerController::OpenInventory()
 
 void AMainPlayerController::OnHealthChanged(const FOnAttributeChangeData& Data)
 {
-    if (HUDWidget)
+    if (!HUDWidget)
     {
-        ACharBase* CharBase = Cast<ACharBase>(GetPawn());
-        if (CharBase && CharBase->GetAttributeSet())
-        {
-            float CurrentHP = CharBase->GetAttributeSet()->GetCurrentHP();
-            float MaxHP = CharBase->GetAttributeSet()->GetMaxHP();
-            HUDWidget->UpdateHP(CurrentHP, MaxHP);
-        }
+        return;
     }
+    const ACharBase* CharBase = Cast<ACharBase>(GetPawn());
+    if (!CharBase)
+    {
+        return;
+    }
+    const UArenaAttributeSet* AttributeSet = CharBase->GetAttributeSet();
+    if (!AttributeSet)
+    {
+        return;
+    }
+    float CurrentHP = CharBase->GetAttributeSet()->GetCurrentHP();
+    float MaxHP = CharBase->GetAttributeSet()->GetMaxHP();
+    HUDWidget->UpdateHP(CurrentHP, MaxHP);
+}
+
+void AMainPlayerController::OnStatsChanged(const FOnAttributeChangeData& Data)
+{
+    if (!HUDWidget)
+    {
+        return;
+    }
+    const ACharBase* CharBase = Cast<ACharBase>(GetPawn());
+    if (!CharBase)
+    {
+        return;
+    }
+    const UArenaAttributeSet* AttributeSet = CharBase->GetAttributeSet();
+    if (!AttributeSet)
+    {
+        return;
+    }
+
+    HUDWidget->UpdateStats(AttributeSet);
 }
