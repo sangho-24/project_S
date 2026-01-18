@@ -10,6 +10,12 @@ UInventoryComponent::UInventoryComponent()
 	SetIsReplicatedByDefault(true);
 }
 
+void UInventoryComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+	InventoryItems.SetNum(MaxSlots);
+}
+
 void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -59,11 +65,11 @@ bool UInventoryComponent::AddItem(UItemTemplate* ItemTemplate, int32 Count)
 				ExistingItem.StackCount += AddCount;
 				RemainingCount -= AddCount;
 
-				OnInventoryUpdated.Broadcast(i, ExistingItem);
+				OnInventoryUpdated.Broadcast();
 			}
 		}
 	}
-	// 2단계: 남은 아이템을 새 슬롯에 추가
+	// 남은 아이템을 새 슬롯에 추가
 	while (RemainingCount > 0)
 	{
 		int32 EmptySlot = FindEmptySlot();
@@ -81,7 +87,7 @@ bool UInventoryComponent::AddItem(UItemTemplate* ItemTemplate, int32 Count)
 		{
 			GrantItemAbilitiesAndEffects(InventoryItems[EmptySlot]);
 		}
-		OnInventoryUpdated.Broadcast(EmptySlot, InventoryItems[EmptySlot]);
+		OnInventoryUpdated.Broadcast();
 	}
 	return true;
 }
@@ -113,7 +119,7 @@ bool UInventoryComponent::RemoveItem(int32 SlotIndex, int32 Count)
 		Item.StackCount -= Count;
 	}
 
-	OnInventoryUpdated.Broadcast(SlotIndex, Item);
+	OnInventoryUpdated.Broadcast();
 	return true;
 }
 
@@ -167,7 +173,7 @@ bool UInventoryComponent::UseItem(int32 SlotIndex)
 					if (ItemTemplate->ItemType == EItemType::Consumable)
 					{
 						RemoveItem(SlotIndex, 1);
-						OnInventoryUpdated.Broadcast(SlotIndex, Item);
+						OnInventoryUpdated.Broadcast();
 					}
 					return true;
 				}
@@ -188,12 +194,9 @@ FInventoryItem UInventoryComponent::GetItemAtSlot(int32 SlotIndex) const
 
 void UInventoryComponent::OnRep_InventoryItems()
 {
-	// 클라이언트에서 인벤토리 업데이트 알림
-	for (int32 i = 0; i < InventoryItems.Num(); i++)
-	{
-		OnInventoryUpdated.Broadcast(i, InventoryItems[i]);
-	}
+	OnInventoryUpdated.Broadcast();
 }
+
 void UInventoryComponent::ServerAddItem_Implementation(UItemTemplate* ItemTemplate, int32 Count)
 {
 	AddItem(ItemTemplate, Count);

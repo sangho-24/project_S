@@ -67,7 +67,7 @@ void UInventoryWidget::RefreshInventory()
 	}
 }
 
-void UInventoryWidget::OnInventoryUpdated(int32 SlotIndex, const FInventoryItem& Item)
+void UInventoryWidget::OnInventoryUpdated()
 {
 	// 인벤토리가 변경되면 전체 갱신
 	RefreshInventory();

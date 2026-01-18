@@ -29,6 +29,8 @@ void AMainPlayerController::CreateHUD()
             if (CharBase)
             {
                 UAbilitySystemComponent* ASC = CharBase->GetAbilitySystemComponent();
+
+                // 스탯 델리게이트 바인딩
                 UArenaAttributeSet* AttributeSet = CharBase->GetAttributeSet();
                 if (ASC && AttributeSet)
                 {
@@ -46,6 +48,13 @@ void AMainPlayerController::CreateHUD()
 							this, &AMainPlayerController::OnStatsChanged);
                     HUDWidget->UpdateHP(AttributeSet->GetCurrentHP(), AttributeSet->GetMaxHP());
                     HUDWidget->UpdateStats(AttributeSet);
+                }
+
+                // 인벤토리 초기화
+                UInventoryComponent* InventoryComponent = CharBase->FindComponentByClass<UInventoryComponent>();
+                if (InventoryComponent)
+                {
+                    HUDWidget->InitializeInventory(InventoryComponent);
                 }
             }
         }
@@ -102,7 +111,6 @@ void AMainPlayerController::SetupInputComponent()
 
 void AMainPlayerController::OpenInventory()
 {
-	UE_LOG(LogTemp, Warning, TEXT("인벤토리 열기"));
     ACharBase* CharBase = Cast<ACharBase>(GetPawn());
     if (!CharBase)
     {

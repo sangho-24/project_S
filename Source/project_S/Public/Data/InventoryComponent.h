@@ -7,7 +7,7 @@
 
 class UAbilitySystemComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryUpdated, int32, SlotIndex, const FInventoryItem&, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PROJECT_S_API UInventoryComponent : public UActorComponent
@@ -20,6 +20,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
+	virtual void InitializeComponent() override;
 	virtual void BeginPlay() override;
 
 	// 인벤토리 슬롯
@@ -27,7 +28,7 @@ protected:
 	TArray<FInventoryItem> InventoryItems;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory")
-	int32 MaxSlots = 20;
+	int32 MaxSlots = 6;
 
 public:	
 	// 인벤토리 변경 알림

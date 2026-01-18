@@ -33,5 +33,5 @@ public:
 
 private:
 	UFUNCTION()
-	void OnInventoryUpdated(int32 SlotIndex, const FInventoryItem& Item);
+	void OnInventoryUpdated();
 };
