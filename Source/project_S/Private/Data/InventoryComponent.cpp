@@ -45,7 +45,7 @@ bool UInventoryComponent::AddItem(UItemTemplate* ItemTemplate, int32 Count)
 	// 이미 존재하는 스택부터 채워보기
 	if (ItemTemplate->MaxStackCount > 1)
 	{
-		for (int32 i = 0; i < InventoryItems.Num() && RemainingCount > 0; ++i)
+		for (int32 i = 0; i < InventoryItems.Num() && RemainingCount > 0; i++)
 		{
 			FInventoryItem& ExistingItem = InventoryItems[i];
 
@@ -77,6 +77,10 @@ bool UInventoryComponent::AddItem(UItemTemplate* ItemTemplate, int32 Count)
 		InventoryItems[EmptySlot] = FInventoryItem(ItemTemplate, AddCount);
 		RemainingCount -= AddCount;
 
+		if (InventoryItems[EmptySlot].GrantedAbilityHandles.Num() == 0 && InventoryItems[EmptySlot].ActiveEffectHandles.Num() == 0)
+		{
+			GrantItemAbilitiesAndEffects(InventoryItems[EmptySlot]);
+		}
 		OnInventoryUpdated.Broadcast(EmptySlot, InventoryItems[EmptySlot]);
 	}
 	return true;
@@ -84,15 +88,15 @@ bool UInventoryComponent::AddItem(UItemTemplate* ItemTemplate, int32 Count)
 
 bool UInventoryComponent::RemoveItem(int32 SlotIndex, int32 Count)
 {
+	if (!InventoryItems.IsValidIndex(SlotIndex) || !InventoryItems[SlotIndex].IsValid())
+	{
+		return false;
+	}
+
 	if (GetOwnerRole() != ROLE_Authority)
 	{
 		ServerRemoveItem(SlotIndex, Count);
 		return true;
-	}
-
-	if (!InventoryItems.IsValidIndex(SlotIndex) || !InventoryItems[SlotIndex].IsValid())
-	{
-		return false;
 	}
 
 	FInventoryItem& Item = InventoryItems[SlotIndex];
@@ -115,81 +119,62 @@ bool UInventoryComponent::RemoveItem(int32 SlotIndex, int32 Count)
 
 bool UInventoryComponent::UseItem(int32 SlotIndex)
 {
+	if (!InventoryItems.IsValidIndex(SlotIndex) || !InventoryItems[SlotIndex].IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("빈 슬롯"));
+		return false;
+	}
+
 	if (GetOwnerRole() != ROLE_Authority)
 	{
 		ServerUseItem(SlotIndex);
 		return true;
 	}
 
-	if (!InventoryItems.IsValidIndex(SlotIndex) || !InventoryItems[SlotIndex].IsValid())
-	{
-		return false;
-	}
-
 	FInventoryItem& Item = InventoryItems[SlotIndex];
 	UItemTemplate* ItemTemplate = Item.ItemTemplate;
-
-	// 이미 장착된 장비는 사용 불가
-	if (Item.GrantedAbilityHandles.Num() > 0 || Item.ActiveEffectHandles.Num() > 0)
+	if (!ItemTemplate)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("이미 장착된 아이템"));
+		UE_LOG(LogTemp, Warning, TEXT("아이템 템플릿 없음"));
+		return false;
+	}
+	UAbilitySystemComponent* ASC = GetOwnerASC();
+	if (!ASC)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ASC 없음"));
 		return false;
 	}
 
-	switch (ItemTemplate->ItemType)
+	if(ItemTemplate->ItemType == EItemType::Equipment || ItemTemplate->ItemType == EItemType::Skill)
 	{
-	case EItemType::Equipment:
-	case EItemType::Skill:
-		// 장비/패시브 아이템 - 어빌리티와 이펙트 부여
-		GrantItemAbilitiesAndEffects(Item);
-		UE_LOG(LogTemp, Log, TEXT("아이템 장착: %s"), *ItemTemplate->ItemName.ToString());
-		break;
-
-	case EItemType::Consumable:
-		// 소비 아이템 - 이펙트 적용 후 제거
-		UAbilitySystemComponent* ASC = GetOwnerASC();
-		for (const FGameplayEffectValue& ConsumeEffect : Item.ItemTemplate->ConsumeEffects)
+		UE_LOG(LogTemp, Log, TEXT("사용 불가 아이템 타입"));
+		return false;
+	}
+	if(ItemTemplate->ItemType == EItemType::Consumable || ItemTemplate->ItemType == EItemType::Usable)
+	{
+		for (const FGameplayEffectValue& ActiveEffect : Item.ItemTemplate->ActiveEffects)
 		{
-			if (ConsumeEffect.EffectClass)
+			if (ActiveEffect.EffectClass)
 			{
 				FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
 				ContextHandle.AddSourceObject(GetOwner());
 
-				FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(ConsumeEffect.EffectClass, 1.0f, ContextHandle);
+				FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(ActiveEffect.EffectClass, 1.0f, ContextHandle);
 				if (SpecHandle.IsValid())
 				{
-					SpecHandle.Data.Get()->SetSetByCallerMagnitude(ConsumeEffect.DataTag, ConsumeEffect.Value);
+					SpecHandle.Data.Get()->SetSetByCallerMagnitude(ActiveEffect.DataTag, ActiveEffect.Value);
 					FActiveGameplayEffectHandle ActiveHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-					RemoveItem(SlotIndex, 1);
+					if (ItemTemplate->ItemType == EItemType::Consumable)
+					{
+						RemoveItem(SlotIndex, 1);
+						OnInventoryUpdated.Broadcast(SlotIndex, Item);
+					}
+					return true;
 				}
 			}
 		}
-		break;
 	}
-
-	OnInventoryUpdated.Broadcast(SlotIndex, Item);
-	return true;
-}
-
-bool UInventoryComponent::UnequipItem(int32 SlotIndex)
-{
-	if (GetOwnerRole() != ROLE_Authority)
-	{
-		ServerUnequipItem(SlotIndex);
-		return true;
-	}
-
-	if (!InventoryItems.IsValidIndex(SlotIndex) || !InventoryItems[SlotIndex].IsValid())
-	{
-		return false;
-	}
-
-	FInventoryItem& Item = InventoryItems[SlotIndex];
-	RemoveItemAbilitiesAndEffects(Item);
-	OnInventoryUpdated.Broadcast(SlotIndex, Item);
-
-	UE_LOG(LogTemp, Log, TEXT("아이템 장착 해제: %s"), *Item.ItemTemplate->ItemName.ToString());
-	return true;
+	return false;
 }
 
 FInventoryItem UInventoryComponent::GetItemAtSlot(int32 SlotIndex) const
@@ -224,10 +209,6 @@ void UInventoryComponent::ServerUseItem_Implementation(int32 SlotIndex)
 	UseItem(SlotIndex);
 }
 
-void UInventoryComponent::ServerUnequipItem_Implementation(int32 SlotIndex)
-{
-	UnequipItem(SlotIndex);
-}
 
 void UInventoryComponent::GrantItemAbilitiesAndEffects(FInventoryItem& Item)
 {
@@ -289,6 +270,7 @@ void UInventoryComponent::RemoveItemAbilitiesAndEffects(FInventoryItem& Item)
 	}
 	Item.ActiveEffectHandles.Empty();
 }
+
 
 int32 UInventoryComponent::FindEmptySlot() const
 {

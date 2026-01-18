@@ -46,10 +46,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool UseItem(int32 SlotIndex);
 
-	// 아이템 장착 해제
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	bool UnequipItem(int32 SlotIndex);
-
 	// 인벤토리 조회
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	const TArray<FInventoryItem>& GetInventory() const { return InventoryItems; }
@@ -71,8 +67,6 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerUseItem(int32 SlotIndex);
 
-	UFUNCTION(Server, Reliable)
-	void ServerUnequipItem(int32 SlotIndex);
 
 private:
 	// GAS 어빌리티/이펙트 부여

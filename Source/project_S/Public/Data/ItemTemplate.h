@@ -13,7 +13,8 @@ enum class EItemType : uint8
 {
 	Equipment UMETA(DisplayName = "장비"),
 	Skill UMETA(DisplayName = "스킬"),
-	Consumable UMETA(DisplayName = "소비")
+	Consumable UMETA(DisplayName = "소비"),
+	Usable UMETA(DisplayName = "액티브")
 };
 
 USTRUCT(BlueprintType)
@@ -65,7 +66,7 @@ public:
 
 	// 소비 아이템용 - 사용 시 적용되는 이펙트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
-	TArray<FGameplayEffectValue> ConsumeEffects;
+	TArray<FGameplayEffectValue> ActiveEffects;
 
 	// 최대 스택 수
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
