@@ -19,6 +19,7 @@ class UInputAction;
 class UAbilitySystemComponent;
 class UArenaAttributeSet;
 class UWidgetComponent;
+class UFloatingHPBarWidget;
 
 UCLASS()
 class PROJECT_S_API ACharBase : public APawn, public IAbilitySystemInterface
@@ -61,6 +62,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	UWidgetComponent* HPBarComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UFloatingHPBarWidget* HPBarWidget;
 
 	FVector MouseCursorLocation;
 
@@ -76,7 +79,7 @@ protected:
 	UInputAction* BasicShotAction;
 
 // 멤버 변수
-public:
+protected:
 	ACharBase();
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	float MaxSpeed = 600.0f;
@@ -89,14 +92,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	float AngularDragPower = 60.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	float UpdateInterval = 0.1f;
+
 // 임시 변수
 private:
     FVector2D CurrentInputVector;
 	bool bIsASCInitialized = false;
+	FTimerHandle ScaleUpdateTimerHandle;
 
 // 오버라이드 함수
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
 
@@ -104,7 +112,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-
+	void StartTimerUpdate();
+	void StopTimerUpdate();
 
 // 커스텀 함수
 protected:
@@ -114,6 +123,7 @@ protected:
 	void ApplyHorizontalDamping(float DeltaTime);
 	void Jump(const FInputActionValue &Value);
 	void BasicShot(const FInputActionValue& Value);
+	void UpdateScale();
 
 	UFUNCTION(Server, Unreliable)
 	void ServerMovementImpulse(FVector2D InputVector);

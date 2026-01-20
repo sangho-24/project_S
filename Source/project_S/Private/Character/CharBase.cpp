@@ -99,6 +99,13 @@ void ACharBase::BeginPlay()
     {
         InitializeAbilitySystem();
     }
+    StartTimerUpdate();
+}
+
+void ACharBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    StopTimerUpdate();
+    Super::EndPlay(EndPlayReason);
 }
 
 // 서버에서만 호출
@@ -228,6 +235,37 @@ void ACharBase::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
     }
 }
 
+UAbilitySystemComponent* ACharBase::GetAbilitySystemComponent() const
+{
+    return AbilitySystemComponent;
+}
+
+void ACharBase::StartTimerUpdate()
+{
+    if (UWorld* World = GetWorld())
+    {
+        FTimerManager& TimerManager = World->GetTimerManager();
+        if (!TimerManager.IsTimerActive(ScaleUpdateTimerHandle))
+        {
+            UpdateScale();
+            TimerManager.SetTimer(
+                ScaleUpdateTimerHandle,
+                this,
+                &ACharBase::UpdateScale,
+                UpdateInterval,
+                true);
+        }
+    }
+}
+
+void ACharBase::StopTimerUpdate()
+{
+    if (UWorld* World = GetWorld())
+    {
+        World->GetTimerManager().ClearTimer(ScaleUpdateTimerHandle);
+    }
+}
+
 void ACharBase::Move(const FInputActionValue &Value)
 {
     FVector2D InputVector = Value.Get<FVector2D>();
@@ -331,9 +369,22 @@ void ACharBase::BasicShot(const FInputActionValue& Value)
     AbilitySystemComponent->HandleGameplayEvent(BasicShotAbilityTag, &EventData);
 }
 
-UAbilitySystemComponent* ACharBase::GetAbilitySystemComponent() const
+void ACharBase::UpdateScale()
 {
-    return AbilitySystemComponent;
+    if(!HPBarWidget)
+	{
+		return;
+	}
+    if (const APlayerController* PC = GetWorld()->GetFirstPlayerController())
+    {
+        FVector ViewLoc;
+        FRotator ViewRot;
+        PC->GetPlayerViewPoint(ViewLoc, ViewRot);
+        const float Distance = FVector::Dist(
+            FVector(ViewLoc.X, 0.0f, 0.0f), 
+            FVector(HPBarComponent->GetComponentLocation().X, 0.0f, 0.0f));
+	    HPBarWidget->UpdateScale(Distance);
+    }
 }
 
 void ACharBase::InitializeFloatingHPBar()
@@ -343,9 +394,10 @@ void ACharBase::InitializeFloatingHPBar()
         HPBarComponent->InitWidget();
         float CurrentHP = AttributeSet->GetCurrentHP();
         float MaxHP = AttributeSet->GetMaxHP();
-        if (UFloatingHPBarWidget* HPWidget = Cast<UFloatingHPBarWidget>(HPBarComponent->GetUserWidgetObject()))
+		HPBarWidget = Cast<UFloatingHPBarWidget>(HPBarComponent->GetUserWidgetObject());
+        if (HPBarWidget)
         {
-            HPWidget->UpdateHP(CurrentHP, MaxHP);
+            HPBarWidget->UpdateHP(CurrentHP, MaxHP);
         }
 
         AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
@@ -358,12 +410,11 @@ void ACharBase::InitializeFloatingHPBar()
 
 void ACharBase::OnHealthChanged(const FOnAttributeChangeData& Data)
 {
-    if (HPBarComponent)
+    if (HPBarComponent&&HPBarWidget)
     {
-        UFloatingHPBarWidget* FloatingHPWidget = Cast<UFloatingHPBarWidget>(HPBarComponent->GetUserWidgetObject());
-        if (FloatingHPWidget && AttributeSet)
+        if (HPBarWidget && AttributeSet)
         {
-            FloatingHPWidget->UpdateHP(AttributeSet->GetCurrentHP(), AttributeSet->GetMaxHP());
+            HPBarWidget->UpdateHP(AttributeSet->GetCurrentHP(), AttributeSet->GetMaxHP());
         }
     }
 }

@@ -13,10 +13,22 @@ class PROJECT_S_API UFloatingHPBarWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-public:
-    void UpdateHP(float CurrentHP, float MaxHP);
-
 protected:
     UPROPERTY(meta = (BindWidget))
     UProgressBar* HPProgressBar;
+
+protected:
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FloatingHPBar")
+    float NearDistance = 500.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FloatingHPBar")
+    float FarDistance = 3000.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FloatingHPBar")
+    float MinScale = 0.5f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FloatingHPBar")
+	float MaxScale = 1.5f;
+
+public:
+    void UpdateHP(float CurrentHP, float MaxHP);
+	void UpdateScale(float Distance);
+
 };
