@@ -28,7 +28,7 @@ protected:
 	TArray<FInventoryItem> InventoryItems;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory")
-	int32 MaxSlots = 6;
+	int32 MaxSlots = 8;
 
 public:	
 	// 인벤토리 변경 알림

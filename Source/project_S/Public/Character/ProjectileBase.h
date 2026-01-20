@@ -10,7 +10,7 @@
 #define ECC_Projectile ECC_GameTraceChannel1
 
 class USphereComponent;
-class UStaticMeshComponent;
+class UNiagaraComponent;
 class UProjectileMovementComponent;
 class UGameplayEffect;
 
@@ -29,7 +29,7 @@ protected:
 	USphereComponent* CollisionComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* MeshComponent;
+	UNiagaraComponent* NiagaraComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UProjectileMovementComponent* ProjectileMovement;
@@ -89,6 +89,5 @@ protected:
 
 	// Gameplay Cue 실행 헬퍼
 	void ExecuteHitGameplayCue(AActor* TargetActor, const FHitResult& HitResult);
-
 
 };

@@ -1,5 +1,6 @@
 #include "Gas/GC_ProjectileHit.h"
 #include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 UGC_ProjectileHit::UGC_ProjectileHit()
@@ -27,16 +28,30 @@ bool UGC_ProjectileHit::OnExecute_Implementation(AActor* MyTarget, const FGamepl
 	// 나이아가라 이펙트 재생
 	if (HitEffect)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			MyTarget->GetWorld(),
 			HitEffect,
 			Location,
 			Rotation,
-			HitEffectScale,
+			bUseCustomScales ? FVector(1.0f, 1.0f, 1.0f) : FVector(EffectScale),
 			true,
 			true,
 			ENCPoolMethod::AutoRelease
 		);
+
+		if (NiagaraComp)
+		{
+			if (bUseCustomScales)
+			{
+				NiagaraComp->SetVariableFloat(TEXT("Scale"), EffectScale);
+			}
+			if (bUseColorParameters)
+			{
+			NiagaraComp->SetVariableLinearColor(TEXT("Color 01"), Color01);
+			NiagaraComp->SetVariableLinearColor(TEXT("Color 02"), Color02);
+			NiagaraComp->SetVariableLinearColor(TEXT("Color 03"), Color03);
+			}
+		}
 	}
 
 	// 사운드 재생

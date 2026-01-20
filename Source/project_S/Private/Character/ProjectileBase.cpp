@@ -1,13 +1,13 @@
 #include "Character/ProjectileBase.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
-#include "Components/StaticMeshComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemGlobals.h"
 #include "GameplayEffect.h"
 #include "GameplayCueManager.h"
+#include "NiagaraComponent.h"
 
 
 
@@ -28,16 +28,10 @@ AProjectileBase::AProjectileBase()
 	CollisionComponent->SetGenerateOverlapEvents(true);
 	RootComponent = CollisionComponent;
 
-	// 메시 컴포넌트
-	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
-	MeshComponent->SetupAttachment(CollisionComponent);
-	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMeshAsset(TEXT("/Engine/BasicShapes/Sphere"));
-	if (SphereMeshAsset.Succeeded())
-	{
-		MeshComponent->SetStaticMesh(SphereMeshAsset.Object);
-		MeshComponent->SetRelativeScale3D(FVector(0.3f, 0.3f, 0.3f));
-	}
+	// 나이아가라 컴포넌트
+	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComponent"));
+	NiagaraComponent->SetupAttachment(CollisionComponent);
+	NiagaraComponent->bAutoActivate = true;
 
 	// 프로젝타일 무브먼트 컴포넌트
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
@@ -63,6 +57,7 @@ void AProjectileBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 void AProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
+
 	if (CollisionComponent)
 	{
 		CollisionComponent->OnComponentHit.AddDynamic(this, &AProjectileBase::OnHit);

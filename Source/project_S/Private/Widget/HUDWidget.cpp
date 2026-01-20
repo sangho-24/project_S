@@ -2,6 +2,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridPanel.h"
+#include "Components/UniformGridSlot.h"
 #include "Widget/ItemSlotWidget.h"
 #include "Data/InventoryComponent.h"
 #include "Data/InventoryItem.h"
@@ -101,7 +102,7 @@ void UHUDWidget::RefreshInventory()
 	}
 
 	const TArray<FInventoryItem>& Inventory = InventoryComponent->GetInventory();
-	const int32 ColumnCount = 3;
+	const int32 ColumnCount = 4;
 
 	for (int32 Index = 0; Index < Inventory.Num(); Index++)
 	{
@@ -110,7 +111,12 @@ void UHUDWidget::RefreshInventory()
 			SlotWidget->SetItemData(Inventory[Index], Index);
 			const int32 Row = Index / ColumnCount;
 			const int32 Column = Index % ColumnCount;
-			InventoryGridPanel->AddChildToUniformGrid(SlotWidget, Row, Column);
+			UUniformGridSlot* GridSlot = InventoryGridPanel->AddChildToUniformGrid(SlotWidget, Row, Column);
+			if (GridSlot)
+			{
+				GridSlot->SetHorizontalAlignment(HAlign_Fill);
+				GridSlot->SetVerticalAlignment(VAlign_Fill);
+			}
 		}
 	}
 }
