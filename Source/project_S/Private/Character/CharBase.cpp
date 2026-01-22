@@ -105,7 +105,7 @@ void ACharBase::BeginPlay()
     }
     if (!BasicShotAbilityTag.IsValid())
     {
-        BasicShotAbilityTag = FGameplayTag::RequestGameplayTag(TEXT("Ability.BasicShot"));
+        BasicShotAbilityTag = FGameplayTag::RequestGameplayTag(TEXT("Ability.Attack.BasicShot"));
     }
     if (AbilitySystemComponent)
     {
@@ -138,6 +138,16 @@ void ACharBase::OnRep_PlayerState()
     {
         InitializeAbilitySystem();
     }
+}
+
+void ACharBase::Death()
+{
+    if (bIsDead)
+    {
+        return;
+    }
+	UE_LOG(LogTemp, Warning, TEXT("!@펑@!@펑@! [죽음] !@펑@!@펑@!"));
+    bIsDead = true;
 }
 
 void ACharBase::InitializeAbilitySystem()

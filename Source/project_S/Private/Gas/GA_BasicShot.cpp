@@ -11,10 +11,10 @@ UGA_BasicShot::UGA_BasicShot()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerInitiated;
 	//AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(TEXT("Ability.BasicShot")));
-	SetAssetTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag(TEXT("Ability.BasicShot"))));
+	SetAssetTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag(TEXT("Ability.Attack.BasicShot"))));
 	// HandleGameplayEvent 어빌리티는 트리거 태그가 필요함
 	FAbilityTriggerData TriggerData;
-	TriggerData.TriggerTag = FGameplayTag::RequestGameplayTag(TEXT("Ability.BasicShot"));
+	TriggerData.TriggerTag = FGameplayTag::RequestGameplayTag(TEXT("Ability.Attack.BasicShot"));
 	TriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
 	AbilityTriggers.Add(TriggerData);
 }
@@ -126,11 +126,11 @@ bool UGA_BasicShot::CanActivateAbility(
 	}
 
 	// 죽었으면 발사 불가
-	//ACharBase* Character = Cast<ACharBase>(ActorInfo->AvatarActor.Get());
-	//if (Character && Character->IsDead())
-	//{
-	//	return false;
-	//}
+	ACharBase* Character = Cast<ACharBase>(ActorInfo->AvatarActor.Get());
+	if (Character && Character->GetIsDead())
+	{
+		return false;
+	}
 
 	return true;
 }

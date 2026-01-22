@@ -127,7 +127,6 @@ void AProjectileBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	ExecuteHitGameplayCue(OtherActor, Hit);
 	if (HasAuthority())
 	{
-	UE_LOG(LogTemp, Warning, TEXT("투사체가 벽에 충돌! 대상: %s"), *OtherActor->GetName());
 	Destroy();
 	}
 }

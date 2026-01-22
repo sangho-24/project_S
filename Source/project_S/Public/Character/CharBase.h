@@ -99,11 +99,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	float UpdateInterval = 0.1f;
 
+
+
 // 임시 변수
 private:
     FVector2D CurrentInputVector;
 	bool bIsASCInitialized = false;
 	FTimerHandle ScaleUpdateTimerHandle;
+	bool bIsDead = false;
 
 // 오버라이드 함수
 protected:
@@ -118,6 +121,7 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	void StartTimerUpdate();
 	void StopTimerUpdate();
+
 
 // 커스텀 함수
 protected:
@@ -139,11 +143,15 @@ public:
 	FORCEINLINE UPrimitiveComponent* GetPhysicsComponent() const { return Sphere; }
 	FORCEINLINE UArenaAttributeSet* GetAttributeSet() const { return AttributeSet; }
 	FORCEINLINE FVector GetMouseCursorLocation() const { return MouseCursorLocation; }
+	FORCEINLINE bool GetIsDead() const { return bIsDead; }
+
+	void Death();
 
 private:
     void InitializeAbilitySystem();
     void GiveStartingAbilities();
 	void InitializeFloatingHPBar();
+
 private:
 	void OnHealthChanged(const FOnAttributeChangeData& Data);
 };

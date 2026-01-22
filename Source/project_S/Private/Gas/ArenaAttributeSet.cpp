@@ -1,6 +1,7 @@
 #include "Gas/ArenaAttributeSet.h"
 #include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
+#include "Character/CharBase.h"
 
 UArenaAttributeSet::UArenaAttributeSet()
 {
@@ -58,8 +59,9 @@ void UArenaAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 			// 사망 체크
 				if (GetCurrentHP() <= 0.0f)
 				{
+					ACharBase* Character = Cast<ACharBase>(TargetActor);
 					UE_LOG(LogTemp, Warning, TEXT("!!! %s IS DEAD !!!"), *TargetActor->GetName());
-					// 여기서 Character->Death() 호출
+					Character->Death();
 				}
 		}
 	}

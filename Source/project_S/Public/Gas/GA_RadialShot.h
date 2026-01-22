@@ -1,20 +1,20 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "GA_BasicShot.generated.h"
+#include "GA_RadialShot.generated.h"
 
 class AProjectileBase;
 
-/**
- * 
- */
 UCLASS()
-class PROJECT_S_API UGA_BasicShot : public UGameplayAbility
+class PROJECT_S_API UGA_RadialShot : public UGameplayAbility
 {
 	GENERATED_BODY()
+	
 public:
-    UGA_BasicShot();
+    UGA_RadialShot();
 
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
@@ -40,13 +40,40 @@ public:
         const FGameplayAbilityActivationInfo ActivationInfo,
         bool bReplicateCancelAbility) override;
 
+    virtual void OnGiveAbility(
+        const FGameplayAbilityActorInfo* ActorInfo,
+        const FGameplayAbilitySpec& Spec) override;
+
+    virtual void OnRemoveAbility(
+        const FGameplayAbilityActorInfo* ActorInfo,
+        const FGameplayAbilitySpec& Spec) override;
+
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
     TSubclassOf<AProjectileBase> ProjectileClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
+	int32 ProjectileCount = 12;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
+    float ProjectileInterval = 0.1f;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
     float ProjectileSpeed = 1000.0f;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
     float ProjectileDamage = 5.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
+    float Cooldown = 5.0f;
+
+private:
+    void StartAutoCastTimer();
+    void StopAutoCastTimer();
+    void AutoCastSkill();
+
+    int32 SkillStack = 0;
+    FTimerHandle AutoCastTimerHandle;
+    TArray<FGameplayAbilitySpecHandle> AutoCastSpecHandles;
+    TWeakObjectPtr<UAbilitySystemComponent> CachedASC;
 };
