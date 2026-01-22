@@ -69,7 +69,7 @@ FVector AMainPlayerController::GetMouseCursorLocation() const
     FHitResult HitResult;
 
     if (GetWorld()->LineTraceSingleByChannel(
-        HitResult, MouseWorldLocation, TraceEnd, ECC_Visibility))
+        HitResult, MouseWorldLocation, TraceEnd, ECC_GameTraceChannel2))
     {
         return HitResult.Location;
     }

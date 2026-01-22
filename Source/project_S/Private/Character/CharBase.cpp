@@ -4,6 +4,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/SceneComponent.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
@@ -59,6 +60,7 @@ ACharBase::ACharBase()
 
     // 카메라 루트를 Sphere에 부착
     CameraRoot = CreateDefaultSubobject<USceneComponent>(TEXT("CameraRoot"));
+    CameraRoot->SetUsingAbsoluteRotation(true);
     CameraRoot->SetupAttachment(Sphere);
 
     // 스프링암을 CameraRoot에 부착
@@ -75,6 +77,16 @@ ACharBase::ACharBase()
     Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
     Camera->SetupAttachment(SpringArm);
     Camera->bUsePawnControlRotation = false;
+
+    // 벽 투명 오버랩박스
+    WallFadeCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("WallFadeCollision"));
+    WallFadeCollision->SetupAttachment(CameraRoot);
+    WallFadeCollision->SetRelativeLocation(FVector(-150.0f, 0.0f, 0.0f));
+    WallFadeCollision->SetBoxExtent(FVector(150.0f, 32.0f, 32.0f));
+    WallFadeCollision->SetCollisionObjectType(ECC_WorldDynamic);
+    WallFadeCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+    WallFadeCollision->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
+    WallFadeCollision->SetGenerateOverlapEvents(true);
 
     // 위젯 컴포넌트 생성
     HPBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarComponent"));

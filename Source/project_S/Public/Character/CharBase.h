@@ -11,6 +11,7 @@
 
 class USpringArmComponent;
 class UCameraComponent;
+class UBoxComponent;
 class UStaticMeshComponent;
 class USceneComponent;
 struct FInputActionValue;
@@ -37,6 +38,9 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     USceneComponent *CameraRoot;
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UBoxComponent* WallFadeCollision;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
 	UAbilitySystemComponent* AbilitySystemComponent;
 
