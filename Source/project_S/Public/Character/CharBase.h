@@ -108,6 +108,11 @@ private:
 	FTimerHandle ScaleUpdateTimerHandle;
 	bool bIsDead = false;
 
+// 자동시전 타이머 관련
+	int32 SkillStack = 0;
+	FTimerHandle AutoCastTimerHandle;
+	TArray<FGameplayAbilitySpecHandle> AutoCastSpecHandles;
+
 // 오버라이드 함수
 protected:
 	virtual void BeginPlay() override;
@@ -119,11 +124,18 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	// 틱대신 타이머
 	void StartTimerUpdate();
 	void StopTimerUpdate();
 
+	void RegisterAbility(const FGameplayTag& Tag, FGameplayAbilitySpecHandle Handle);
+	void UnregisterAbility(const FGameplayTag& Tag, FGameplayAbilitySpecHandle Handle);
 
-// 커스텀 함수
+protected:
+	void StartAutoCastTimer();
+	void StopAutoCastTimer();
+	void AutoCastAbility();
+
 protected:
 	void Move(const FInputActionValue &Value);
 	void MoveCompleted();
@@ -132,6 +144,8 @@ protected:
 	void Jump(const FInputActionValue &Value);
 	void BasicShot(const FInputActionValue& Value);
 	void UpdateScale();
+
+
 
 	UFUNCTION(Server, Unreliable)
 	void ServerMovementImpulse(FVector2D InputVector);
@@ -152,6 +166,7 @@ private:
     void GiveStartingAbilities();
 	void InitializeFloatingHPBar();
 
+	// 이벤트 핸들러
 private:
 	void OnHealthChanged(const FOnAttributeChangeData& Data);
 };

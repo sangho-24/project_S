@@ -288,6 +288,88 @@ void ACharBase::StopTimerUpdate()
     }
 }
 
+void ACharBase::RegisterAbility(const FGameplayTag& Tag, FGameplayAbilitySpecHandle Handle)
+{
+    if (!HasAuthority())
+    {
+        return;
+    }
+
+    AutoCastSpecHandles.AddUnique(Handle);
+    UE_LOG(LogTemp, Warning, TEXT("[캐릭터] RadialShot 등록: %d개"), AutoCastSpecHandles.Num());
+    // 해당 Tag가 없으면 바로 시작. 해당 Tag가 있으면 쿨타임/n 으로 줄이고 타이머 재시작.
+	// 각 Tag별로 관리하려면 TMap<FGameplayTag, FTimerHandle> 등으로 바꿔야 함. (이거 해줘)
+    // TMap은 여기서 만드는게 나을까? 어빌리티에서 만들어서 주는게 나을까?
+	// 아무튼 이렇게 Tag 추가하고 이 태그 개수에 따라서 타이머 시작/재시작.
+    StopAutoCastTimer();
+    StartAutoCastTimer();
+}
+
+void ACharBase::UnregisterAbility(const FGameplayTag& Tag, FGameplayAbilitySpecHandle Handle)
+{
+    if (!HasAuthority())
+    {
+        return;
+    }
+
+    AutoCastSpecHandles.Remove(Handle);
+    UE_LOG(LogTemp, Warning, TEXT("[캐릭터] RadialShot 제거: %d개"), AutoCastSpecHandles.Num());
+    // 여기서도 마찬가지로 핸들을 제거, 이 Tag의 핸들이 몇 개 남았는지 확인
+	// 남은게 없으면 타이머 중지, 남아있으면 쿨타임 조절 후 타이머 재시작
+
+    StopAutoCastTimer();
+
+    if (AutoCastSpecHandles.Num() > 0)
+    {
+        StartAutoCastTimer();
+    }
+}
+
+void ACharBase::StartAutoCastTimer()
+{
+    if (AutoCastSpecHandles.Num() == 0)
+    {
+        return;
+    }
+
+    // BaseCooldown은 어빌리티에서 읽어올거임
+    const float BaseCooldown = 5.0f;
+    const float Interval = BaseCooldown / AutoCastSpecHandles.Num();
+
+    UE_LOG(LogTemp, Warning, TEXT("[캐릭터] RadialShot 타이머 시작: Interval=%f"), Interval);
+
+    GetWorldTimerManager().SetTimer(
+        AutoCastTimerHandle,
+        this,
+        &ACharBase::AutoCastAbility,
+        Interval,
+        true,
+        Interval);
+}
+
+void ACharBase::StopAutoCastTimer()
+{
+    GetWorldTimerManager().ClearTimer(AutoCastTimerHandle);
+    UE_LOG(LogTemp, Warning, TEXT("[캐릭터] RadialShot 타이머 중지"));
+}
+
+void ACharBase::AutoCastAbility()
+{
+    if (AutoCastSpecHandles.Num() == 0 || !AbilitySystemComponent)
+    {
+        StopAutoCastTimer();
+        return;
+    }
+
+    // 첫 번째 핸들로 활성화 (또는 라운드 로빈 방식 사용)
+    FGameplayAbilitySpecHandle Handle = AutoCastSpecHandles[0];
+    if (Handle.IsValid())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[캐릭터] 자동 시전"));
+        AbilitySystemComponent->TryActivateAbility(Handle);
+    }
+}
+
 void ACharBase::Move(const FInputActionValue &Value)
 {
     FVector2D InputVector = Value.Get<FVector2D>();

@@ -68,12 +68,5 @@ protected:
     float Cooldown = 5.0f;
 
 private:
-    void StartAutoCastTimer();
-    void StopAutoCastTimer();
-    void AutoCastSkill();
-
-    int32 SkillStack = 0;
-    FTimerHandle AutoCastTimerHandle;
-    TArray<FGameplayAbilitySpecHandle> AutoCastSpecHandles;
-    TWeakObjectPtr<UAbilitySystemComponent> CachedASC;
+    FGameplayTag AbilityTag;
 };
