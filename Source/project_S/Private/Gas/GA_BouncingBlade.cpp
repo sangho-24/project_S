@@ -1,34 +1,27 @@
-#include "Gas/GA_RadialShot.h"
+#include "Gas/GA_BouncingBlade.h"
 #include "Character/ProjectileBase.h"
 #include "Gas/ArenaAttributeSet.h"
 #include "Character/CharBase.h"
-#include "GameplayTagContainer.h"
 
 
-
-void UGA_RadialShot::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+void UGA_BouncingBlade::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-
-	// 서버에서만 실행
 	if (!HasAuthority(&ActivationInfo))
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
-
 	ACharBase* Character = Cast<ACharBase>(ActorInfo->AvatarActor.Get());
 	if (!Character)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("캐릭터 없음"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
-
 	UArenaAttributeSet* AttributeSet = Character->GetAttributeSet();
 	if (!AttributeSet)
 	{
@@ -36,7 +29,6 @@ void UGA_RadialShot::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
-
 	// 투사체 스폰
 	if (ProjectileClass)
 	{
@@ -45,37 +37,39 @@ void UGA_RadialShot::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		SpawnParams.Instigator = Character;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-		float RandomRotation = FMath::FRandRange(0.0f, 360.0f/ProjectileCount);
-
 		// 람다용 로컬 변수 복사본
 		TSubclassOf<AProjectileBase> LocalProjectileClass = ProjectileClass;
 		float LocalProjectileDamage = ProjectileDamage;
 		float LocalProjectileSpeed = ProjectileSpeed;
 		int32 LocalProjectileCount = ProjectileCount;
+		float LocalProjectileBounciness = ProjectileBounciness;
+		int32 LocalProjectileMaxBounces = ProjectileMaxBounces;
 		UWorld* LocalWorld = Character->GetWorld();
 
 		for (int32 i = 0; i < ProjectileCount; i++)
 		{
 			FTimerHandle TimerHandle;
 			Character->GetWorldTimerManager().SetTimer(
-				TimerHandle, 
-				[SpawnParams, Character, LocalProjectileClass, LocalProjectileDamage, LocalProjectileSpeed, LocalProjectileCount, RandomRotation, LocalWorld, i]()
-			{
-			float AngleDeg = RandomRotation + i * (360.0f / LocalProjectileCount);
-			float AngleRad = FMath::DegreesToRadians(AngleDeg);
-			FVector Direction = FVector(FMath::Cos(AngleRad), FMath::Sin(AngleRad), 0.0f);
-			FVector SpawnLocation = Character->GetActorLocation();
-			FRotator SpawnRotation = Direction.Rotation();
+				TimerHandle,
+				[SpawnParams, Character, LocalProjectileClass, LocalProjectileDamage, LocalProjectileSpeed, LocalProjectileCount, LocalProjectileBounciness, LocalProjectileMaxBounces, LocalWorld, i]()
+				{
+					float RandomRotation = FMath::FRandRange(0.0f, 360.0f);
+					float AngleRad = FMath::DegreesToRadians(RandomRotation);
+					FVector Direction = FVector(FMath::Cos(AngleRad), FMath::Sin(AngleRad), 0.0f);
+					FVector SpawnLocation = Character->GetActorLocation();
+					FRotator SpawnRotation = Direction.Rotation();
 
-			AProjectileBase* Projectile = LocalWorld->SpawnActor<AProjectileBase>(
-				LocalProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
-			if (Projectile)
-			{
-				Projectile->SetDamage(LocalProjectileDamage);
-				Projectile->SetSpeed(LocalProjectileSpeed);
-				Projectile->Launch(Direction);
-			}
-			}, (i+1) * ProjectileInterval, false);
+					AProjectileBase* Projectile = LocalWorld->SpawnActor<AProjectileBase>(
+						LocalProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
+					if (Projectile)
+					{
+						Projectile->SetDamage(LocalProjectileDamage);
+						Projectile->SetSpeed(LocalProjectileSpeed);
+						Projectile->SetMaxBounces(LocalProjectileMaxBounces);
+						Projectile->SetBounciness(LocalProjectileBounciness);
+						Projectile->Launch(Direction);
+					}
+				}, (i+1) * ProjectileInterval, false);
 		}
 	}
 	else

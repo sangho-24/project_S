@@ -32,29 +32,41 @@ protected:
 	UNiagaraComponent* NiagaraComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* MeshComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UProjectileMovementComponent* ProjectileMovement;
 
 	// 값들
 	UPROPERTY(ReplicatedUsing = OnRep_Damage, BlueprintReadOnly, Category = "Projectile")
-	float Damage = 10.0f;
+	float Damage = 5.0f;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Speed, BlueprintReadOnly, Category = "Projectile")
-	float Speed = 2000.0f;
+	float Speed = 1000.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
-	FGameplayTag CueTag;
-
-public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
 	float LifeSpan = 5.0f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_MaxBounces, BlueprintReadOnly, Category = "Projectile")
+	int32 MaxBounces = 0;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Bounciness, BlueprintReadOnly, Category = "Projectile")
+	float Bounciness = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	FGameplayTag HitCueTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	FGameplayTag OverlapCueTag;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
 	TSubclassOf<UGameplayEffect> DamageEffect;
 
+public:
+
+
 
 public:	
-	virtual void Tick(float DeltaTime) override;
-
 	// 네트워크 복제 설정
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -64,6 +76,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
 	void SetSpeed(float NewSpeed);
+
+	UFUNCTION(BlueprintCallable, Category = "Projectile")
+	void SetMaxBounces(int32 NewMaxBounces);
+
+	UFUNCTION(BlueprintCallable, Category = "Projectile")
+	void SetBounciness(float NewBounciness);
 
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
 	void Launch(const FVector& Direction);
@@ -78,16 +96,22 @@ protected:
 	UFUNCTION()
 	void OnRep_Speed();
 
+	UFUNCTION()
+	void OnRep_MaxBounces();
+
+	UFUNCTION()
+	void OnRep_Bounciness();
+
 	// 히트 이벤트
 	UFUNCTION()
-	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		FVector NormalImpulse, const FHitResult& Hit);
 
 	UFUNCTION()
-	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	virtual void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	// Gameplay Cue 실행 헬퍼
-	void ExecuteHitGameplayCue(AActor* TargetActor, const FHitResult& HitResult);
+	void ExecuteHitGameplayCue(AActor* TargetActor, const FHitResult& HitResult, bool bIsHit);
 
 };

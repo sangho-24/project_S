@@ -11,6 +11,7 @@
 
 
 
+
 // Sets default values
 AProjectileBase::AProjectileBase()
 {
@@ -27,6 +28,11 @@ AProjectileBase::AProjectileBase()
 	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
 	CollisionComponent->SetGenerateOverlapEvents(true);
 	RootComponent = CollisionComponent;
+
+	// 메시 컴포넌트
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
+	MeshComponent->SetupAttachment(CollisionComponent);
+	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// 나이아가라 컴포넌트
 	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComponent"));
@@ -52,6 +58,8 @@ void AProjectileBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	DOREPLIFETIME(AProjectileBase, Damage);
 	DOREPLIFETIME(AProjectileBase, Speed);
+	DOREPLIFETIME(AProjectileBase, MaxBounces);
+	DOREPLIFETIME(AProjectileBase, Bounciness);
 }
 
 void AProjectileBase::BeginPlay()
@@ -67,18 +75,8 @@ void AProjectileBase::BeginPlay()
 			CollisionComponent->IgnoreActorWhenMoving(OwnerActor, true);
 		}
 	}
-	if (!CueTag.IsValid())
-	{
-		CueTag = FGameplayTag::RequestGameplayTag(TEXT("GameplayCue.Projectile.Hit"));
-	}
 }
 
-// Called every frame
-void AProjectileBase::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
 
 void AProjectileBase::SetDamage(float NewDamage)
 {
@@ -95,11 +93,37 @@ void AProjectileBase::SetSpeed(float NewSpeed)
 	}
 }
 
+void AProjectileBase::SetMaxBounces(int32 NewMaxBounces)
+{
+	MaxBounces = NewMaxBounces;
+}
+
+void AProjectileBase::SetBounciness(float NewBounciness)
+{
+	Bounciness = NewBounciness;
+	if (ProjectileMovement)
+	{
+		ProjectileMovement->Bounciness = Bounciness;
+	}
+}
+
 void AProjectileBase::Launch(const FVector& Direction)
 {
 	if (ProjectileMovement)
 	{
 		ProjectileMovement->Velocity = Direction.GetSafeNormal() * Speed;
+	}
+}
+
+void AProjectileBase::OnRep_MaxBounces()
+{
+}
+
+void AProjectileBase::OnRep_Bounciness()
+{
+	if (ProjectileMovement)
+	{
+		ProjectileMovement->Bounciness = Bounciness;
 	}
 }
 
@@ -116,65 +140,19 @@ void AProjectileBase::OnRep_Speed()
 	}
 }
 
+
+
 void AProjectileBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (OtherActor == GetOwner())
-	{
-		return;
-	}
-
-	ExecuteHitGameplayCue(OtherActor, Hit);
-	if (HasAuthority())
-	{
-	Destroy();
-	}
 }
 
 void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor == GetOwner())
-	{
-		return;
-	}
-
-	if (!HasAuthority())
-	{
-		return;
-	}
-
-	// GAS 데미지 적용
-	if (OtherActor && DamageEffect)
-	{	// 대상 ASC 가져오기
-		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
-		if (TargetASC)
-		{
-			// 공격자 ASC 가져오기
-			UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
-			// Context 생성(공격자 ASC우선, 없으면 타겟ASC에 생성)
-			FGameplayEffectContextHandle ContextHandle = SourceASC ? SourceASC->MakeEffectContext() : TargetASC->MakeEffectContext();
-			ContextHandle.AddHitResult(SweepResult);
-			ContextHandle.AddInstigator(GetOwner(), this);
-
-			// Spec 생성
-			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(DamageEffect, 1.0f, ContextHandle);
-			if (SpecHandle.IsValid())
-			{
-				FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(TEXT("Data.Damage"));
-				SpecHandle.Data.Get()->SetSetByCallerMagnitude(DamageTag, Damage);
-
-				// GE 적용
-				TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-			}
-		}
-	}
-	// Gameplay Cue 실행
-	ExecuteHitGameplayCue(OtherActor, SweepResult);
-	Destroy();
 }
 
-void AProjectileBase::ExecuteHitGameplayCue(AActor* TargetActor, const FHitResult& HitResult)
+void AProjectileBase::ExecuteHitGameplayCue(AActor* TargetActor, const FHitResult& HitResult, bool bIsHit)
 {
 	if (!TargetActor)
 	{
@@ -198,7 +176,7 @@ void AProjectileBase::ExecuteHitGameplayCue(AActor* TargetActor, const FHitResul
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 	if (TargetASC)
 	{
-		TargetASC->ExecuteGameplayCue(CueTag, CueParams);
+		TargetASC->ExecuteGameplayCue(bIsHit?HitCueTag:OverlapCueTag, CueParams);
 	}
 	else
 	{
@@ -207,7 +185,7 @@ void AProjectileBase::ExecuteHitGameplayCue(AActor* TargetActor, const FHitResul
 		{
 			if (UGameplayCueManager* CueManager = UAbilitySystemGlobals::Get().GetGameplayCueManager())
 			{
-				CueManager->HandleGameplayCue(TargetActor, CueTag, EGameplayCueEvent::Executed, CueParams);
+				CueManager->HandleGameplayCue(TargetActor, bIsHit ? HitCueTag : OverlapCueTag, EGameplayCueEvent::Executed, CueParams);
 			}
 		}
 	}
