@@ -11,6 +11,7 @@
 #include "AbilitySystemComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Gas/ArenaAttributeSet.h"
+#include "Gas/GA_AutoCastBase.h"
 #include "Input/MainPlayerController.h"
 #include "Abilities/GameplayAbilityTargetTypes.h"
 #include "Components/WidgetComponent.h"
@@ -294,15 +295,28 @@ void ACharBase::RegisterAbility(const FGameplayTag& Tag, FGameplayAbilitySpecHan
     {
         return;
     }
+    FAutoCastAbilityInfo* AbilityInfo = AutoCastAbilities.Find(Tag);
+    if (AbilityInfo)
+    {
+        // 이미 해당 태그가 존재하면 핸들만 추가
+        AbilityInfo->SpecHandles.AddUnique(Handle);
+        UE_LOG(LogTemp, Warning, TEXT("[캐릭터] %s 추가 / 현재 %d개"), *Tag.ToString(), AbilityInfo->SpecHandles.Num());
 
-    AutoCastSpecHandles.AddUnique(Handle);
-    UE_LOG(LogTemp, Warning, TEXT("[캐릭터] RadialShot 등록: %d개"), AutoCastSpecHandles.Num());
-    // 해당 Tag가 없으면 바로 시작. 해당 Tag가 있으면 쿨타임/n 으로 줄이고 타이머 재시작.
-	// 각 Tag별로 관리하려면 TMap<FGameplayTag, FTimerHandle> 등으로 바꿔야 함. (이거 해줘)
-    // TMap은 여기서 만드는게 나을까? 어빌리티에서 만들어서 주는게 나을까?
-	// 아무튼 이렇게 Tag 추가하고 이 태그 개수에 따라서 타이머 시작/재시작.
-    StopAutoCastTimer();
-    StartAutoCastTimer();
+        // 타이머 재시작 (간격 조정)
+        StopAutoCastTimer(Tag);
+        StartAutoCastTimer(Tag);
+    }
+    else
+    {
+        // 새로운 태그 추가
+        FAutoCastAbilityInfo NewInfo;
+        NewInfo.SpecHandles.Add(Handle);
+        AutoCastAbilities.Add(Tag, NewInfo);
+        UE_LOG(LogTemp, Warning, TEXT("[어빌리티] %s 새로 등록: 1개"), *Tag.ToString());
+
+        // 타이머 시작
+        StartAutoCastTimer(Tag);
+    }
 }
 
 void ACharBase::UnregisterAbility(const FGameplayTag& Tag, FGameplayAbilitySpecHandle Handle)
@@ -312,60 +326,106 @@ void ACharBase::UnregisterAbility(const FGameplayTag& Tag, FGameplayAbilitySpecH
         return;
     }
 
-    AutoCastSpecHandles.Remove(Handle);
-    UE_LOG(LogTemp, Warning, TEXT("[캐릭터] RadialShot 제거: %d개"), AutoCastSpecHandles.Num());
-    // 여기서도 마찬가지로 핸들을 제거, 이 Tag의 핸들이 몇 개 남았는지 확인
-	// 남은게 없으면 타이머 중지, 남아있으면 쿨타임 조절 후 타이머 재시작
+    FAutoCastAbilityInfo* AbilityInfo = AutoCastAbilities.Find(Tag);
 
-    StopAutoCastTimer();
-
-    if (AutoCastSpecHandles.Num() > 0)
+    if (!AbilityInfo)
     {
-        StartAutoCastTimer();
+        UE_LOG(LogTemp, Warning, TEXT("%s 태그를 찾을 수 없음"), *Tag.ToString());
+        return;
+    }
+
+    // 핸들 제거
+    AbilityInfo->SpecHandles.Remove(Handle);
+    UE_LOG(LogTemp, Warning, TEXT("[어빌리티] %s 제거 / 현재 %d개"), *Tag.ToString(), AbilityInfo->SpecHandles.Num());
+
+    // 타이머 정지
+    StopAutoCastTimer(Tag);
+
+    // 핸들이 남아있으면 타이머 재시작
+    if (AbilityInfo->SpecHandles.Num() > 0)
+    {
+        StartAutoCastTimer(Tag);
+    }
+    else
+    {
+        // 핸들이 없으면 맵에서 제거
+        AutoCastAbilities.Remove(Tag);
+        UE_LOG(LogTemp, Warning, TEXT("[어빌리티] %s 완전 제거"), *Tag.ToString());
     }
 }
 
-void ACharBase::StartAutoCastTimer()
+void ACharBase::StartAutoCastTimer(const FGameplayTag& Tag)
 {
-    if (AutoCastSpecHandles.Num() == 0)
+    FAutoCastAbilityInfo* AbilityInfo = AutoCastAbilities.Find(Tag);
+
+    if (!AbilityInfo || AbilityInfo->SpecHandles.Num() == 0)
     {
         return;
     }
 
-    // BaseCooldown은 어빌리티에서 읽어올거임
-    const float BaseCooldown = 5.0f;
-    const float Interval = BaseCooldown / AutoCastSpecHandles.Num();
+	// 쿨타임을 위해 어빌리티 스펙 가져오기
+    FGameplayAbilitySpec* Spec = AbilitySystemComponent->FindAbilitySpecFromHandle(AbilityInfo->SpecHandles[0]);
+    if (!Spec || !Spec->Ability)
+    {
+        UE_LOG(LogTemp, Error, TEXT("%s 어빌리티 스펙을 찾을 수 없음"), *Tag.ToString());
+        return;
+    }
 
-    UE_LOG(LogTemp, Warning, TEXT("[캐릭터] RadialShot 타이머 시작: Interval=%f"), Interval);
+    float BaseCooldown = 5.0f; // 기본값
+
+    if (UGA_AutoCastBase* AutoCastAbility = Cast<UGA_AutoCastBase>(Spec->Ability))
+    {
+        BaseCooldown = AutoCastAbility->AutoCastCooldown;
+    }
+    else
+    {
+		UE_LOG(LogTemp, Warning, TEXT("AutoCast 아님"));
+    }
+
+    const float Interval = BaseCooldown / AbilityInfo->SpecHandles.Num();
+
+    UE_LOG(LogTemp, Warning, TEXT("[어빌리티] %s 타이머 시작: Interval : %.1f (개수 : %d)"),
+        *Tag.ToString(), Interval, AbilityInfo->SpecHandles.Num());
 
     GetWorldTimerManager().SetTimer(
-        AutoCastTimerHandle,
-        this,
-        &ACharBase::AutoCastAbility,
+        AbilityInfo->TimerHandle,
+        [this, Tag]()
+        {
+            AutoCastAbility(Tag);
+        },
         Interval,
         true,
         Interval);
 }
 
-void ACharBase::StopAutoCastTimer()
+void ACharBase::StopAutoCastTimer(const FGameplayTag& Tag)
 {
-    GetWorldTimerManager().ClearTimer(AutoCastTimerHandle);
-    UE_LOG(LogTemp, Warning, TEXT("[캐릭터] RadialShot 타이머 중지"));
+    FAutoCastAbilityInfo* AbilityInfo = AutoCastAbilities.Find(Tag);
+
+    if (AbilityInfo && AbilityInfo->TimerHandle.IsValid())
+    {
+        GetWorldTimerManager().ClearTimer(AbilityInfo->TimerHandle);
+        UE_LOG(LogTemp, Warning, TEXT("[어빌리티] %s 타이머 중지"), *Tag.ToString());
+    }
 }
 
-void ACharBase::AutoCastAbility()
+void ACharBase::AutoCastAbility(const FGameplayTag& Tag)
 {
-    if (AutoCastSpecHandles.Num() == 0 || !AbilitySystemComponent)
+    FAutoCastAbilityInfo* AbilityInfo = AutoCastAbilities.Find(Tag);
+
+    if (!AbilityInfo || AbilityInfo->SpecHandles.Num() == 0 || !AbilitySystemComponent)
     {
-        StopAutoCastTimer();
+        StopAutoCastTimer(Tag);
+		UE_LOG(LogTemp, Warning, TEXT("[어빌리티] %s 시전 불가"), *Tag.ToString());
         return;
     }
 
-    // 첫 번째 핸들로 활성화 (또는 라운드 로빈 방식 사용)
-    FGameplayAbilitySpecHandle Handle = AutoCastSpecHandles[0];
+    // 첫 번째 핸들로 활성화 (모두 같은 어빌리티이므로)
+    FGameplayAbilitySpecHandle Handle = AbilityInfo->SpecHandles[0];
     if (Handle.IsValid())
     {
-        UE_LOG(LogTemp, Warning, TEXT("[캐릭터] 자동 시전"));
+        UE_LOG(LogTemp, Warning, TEXT("[어빌리티] %s 자동 시전 (핸들 개수: %d)"),
+            *Tag.ToString(), AbilityInfo->SpecHandles.Num());
         AbilitySystemComponent->TryActivateAbility(Handle);
     }
 }

@@ -22,6 +22,17 @@ class UArenaAttributeSet;
 class UWidgetComponent;
 class UFloatingHPBarWidget;
 
+USTRUCT()
+struct FAutoCastAbilityInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<FGameplayAbilitySpecHandle> SpecHandles;
+
+	FTimerHandle TimerHandle;
+};
+
 UCLASS()
 class PROJECT_S_API ACharBase : public APawn, public IAbilitySystemInterface
 {
@@ -113,6 +124,8 @@ private:
 	FTimerHandle AutoCastTimerHandle;
 	TArray<FGameplayAbilitySpecHandle> AutoCastSpecHandles;
 
+	TMap<FGameplayTag, FAutoCastAbilityInfo> AutoCastAbilities;
+
 // 오버라이드 함수
 protected:
 	virtual void BeginPlay() override;
@@ -132,9 +145,9 @@ public:
 	void UnregisterAbility(const FGameplayTag& Tag, FGameplayAbilitySpecHandle Handle);
 
 protected:
-	void StartAutoCastTimer();
-	void StopAutoCastTimer();
-	void AutoCastAbility();
+	void StartAutoCastTimer(const FGameplayTag& Tag);
+	void StopAutoCastTimer(const FGameplayTag& Tag);
+	void AutoCastAbility(const FGameplayTag& Tag);
 
 protected:
 	void Move(const FInputActionValue &Value);

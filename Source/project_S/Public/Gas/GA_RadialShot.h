@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Abilities/GameplayAbility.h"
+#include "Gas/GA_AutoCastBase.h"
 #include "GA_RadialShot.generated.h"
 
 class AProjectileBase;
 
 UCLASS()
-class PROJECT_S_API UGA_RadialShot : public UGameplayAbility
+class PROJECT_S_API UGA_RadialShot : public UGA_AutoCastBase
 {
 	GENERATED_BODY()
 	
@@ -63,9 +63,6 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
     float ProjectileDamage = 5.0f;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
-    float Cooldown = 5.0f;
 
 private:
     FGameplayTag AbilityTag;
