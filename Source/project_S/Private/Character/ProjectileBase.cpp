@@ -47,7 +47,7 @@ AProjectileBase::AProjectileBase()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.0f;
-
+	ProjectileMovement->Bounciness = 1.0f;
 	// 수명
 	InitialLifeSpan = LifeSpan;
 }
@@ -65,7 +65,13 @@ void AProjectileBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 void AProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
-
+	if (ProjectileMovement)
+	{
+		if (!ProjectileMovement->Velocity.IsNearlyZero())
+		{
+			ProjectileMovement->Velocity = ProjectileMovement->Velocity.GetSafeNormal() * Speed;
+		}
+	}
 	if (CollisionComponent)
 	{
 		CollisionComponent->OnComponentHit.AddDynamic(this, &AProjectileBase::OnHit);
@@ -105,6 +111,8 @@ void AProjectileBase::SetBounciness(float NewBounciness)
 	{
 		ProjectileMovement->Bounciness = Bounciness;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("[%s] SetBounciness: %f"),
+		HasAuthority() ? TEXT("서버") : TEXT("클라"), Bounciness);
 }
 
 void AProjectileBase::Launch(const FVector& Direction)
@@ -125,6 +133,7 @@ void AProjectileBase::OnRep_Bounciness()
 	{
 		ProjectileMovement->Bounciness = Bounciness;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("[클라-OnRep] Bounciness: %f"), Bounciness);
 }
 
 void AProjectileBase::OnRep_Damage()
