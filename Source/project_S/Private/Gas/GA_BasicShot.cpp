@@ -98,6 +98,7 @@ void UGA_BasicShot::ActivateAbility(
 		{
 			Projectile->SetDamage(ProjectileDamage);
 			Projectile->SetSpeed(ProjectileSpeed);
+			Projectile->SetProjectileLifeSpan(ProjectileLifeSpan);
 			Projectile->Launch(Direction);
 		}
 		else

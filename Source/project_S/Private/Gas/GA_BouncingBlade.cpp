@@ -41,6 +41,7 @@ void UGA_BouncingBlade::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		TSubclassOf<AProjectileBase> LocalProjectileClass = ProjectileClass;
 		float LocalProjectileDamage = ProjectileDamage;
 		float LocalProjectileSpeed = ProjectileSpeed;
+		float LocalProjectileLifeSpan = ProjectileLifeSpan;
 		int32 LocalProjectileCount = ProjectileCount;
 		float LocalProjectileBounciness = ProjectileBounciness;
 		int32 LocalProjectileMaxBounces = ProjectileMaxBounces;
@@ -51,7 +52,7 @@ void UGA_BouncingBlade::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 			FTimerHandle TimerHandle;
 			Character->GetWorldTimerManager().SetTimer(
 				TimerHandle,
-				[SpawnParams, Character, LocalProjectileClass, LocalProjectileDamage, LocalProjectileSpeed, LocalProjectileCount, LocalProjectileBounciness, LocalProjectileMaxBounces, LocalWorld, i]()
+				[SpawnParams, Character, LocalProjectileClass, LocalProjectileDamage, LocalProjectileSpeed, LocalProjectileLifeSpan, LocalProjectileCount, LocalProjectileBounciness, LocalProjectileMaxBounces, LocalWorld, i]()
 				{
 					float RandomRotation = FMath::FRandRange(0.0f, 360.0f);
 					float AngleRad = FMath::DegreesToRadians(RandomRotation);
@@ -67,6 +68,7 @@ void UGA_BouncingBlade::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 						Projectile->SetSpeed(LocalProjectileSpeed);
 						Projectile->SetMaxBounces(LocalProjectileMaxBounces);
 						Projectile->SetBounciness(LocalProjectileBounciness);
+						Projectile->SetProjectileLifeSpan(LocalProjectileLifeSpan);
 						Projectile->Launch(Direction);
 					}
 				}, (i+1) * ProjectileInterval, false);

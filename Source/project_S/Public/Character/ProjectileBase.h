@@ -9,7 +9,7 @@
 
 #define ECC_Projectile ECC_GameTraceChannel1
 
-class USphereComponent;
+class UBoxComponent;
 class UNiagaraComponent;
 class UProjectileMovementComponent;
 class UGameplayEffect;
@@ -25,8 +25,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	USphereComponent* CollisionComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+	UBoxComponent* CollisionComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UNiagaraComponent* NiagaraComponent;
@@ -44,7 +44,7 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_Speed, BlueprintReadOnly, Category = "Projectile")
 	float Speed = 1000.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
+	UPROPERTY(ReplicatedUsing = OnRep_LifeSpan, BlueprintReadOnly, Category = "Projectile")
 	float LifeSpan = 5.0f;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MaxBounces, BlueprintReadOnly, Category = "Projectile")
@@ -78,6 +78,9 @@ public:
 	void SetSpeed(float NewSpeed);
 
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
+	void SetProjectileLifeSpan(float NewLifeSpan);
+
+	UFUNCTION(BlueprintCallable, Category = "Projectile")
 	void SetMaxBounces(int32 NewMaxBounces);
 
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
@@ -95,6 +98,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_Speed();
+
+	UFUNCTION()
+	void OnRep_LifeSpan();
 
 	UFUNCTION()
 	void OnRep_MaxBounces();

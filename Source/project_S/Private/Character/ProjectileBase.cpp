@@ -1,6 +1,6 @@
 #include "Character/ProjectileBase.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Components/SphereComponent.h"
+#include "Components/BoxComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
@@ -19,8 +19,8 @@ AProjectileBase::AProjectileBase()
 	bReplicates = true;
 
 	// 콜리전 컴포넌트
-	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
-	CollisionComponent->InitSphereRadius(15.0f);
+	CollisionComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionComponent"));
+	CollisionComponent->SetBoxExtent(FVector(15.0f, 15.0f, 15.0f));
 	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CollisionComponent->SetCollisionObjectType(ECC_Projectile);
 	CollisionComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
@@ -58,6 +58,7 @@ void AProjectileBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	DOREPLIFETIME(AProjectileBase, Damage);
 	DOREPLIFETIME(AProjectileBase, Speed);
+	DOREPLIFETIME(AProjectileBase, LifeSpan);
 	DOREPLIFETIME(AProjectileBase, MaxBounces);
 	DOREPLIFETIME(AProjectileBase, Bounciness);
 }
@@ -97,6 +98,12 @@ void AProjectileBase::SetSpeed(float NewSpeed)
 		ProjectileMovement->InitialSpeed = Speed;
 		ProjectileMovement->MaxSpeed = Speed;
 	}
+}
+
+void AProjectileBase::SetProjectileLifeSpan(float NewLifeSpan)
+{
+	LifeSpan = NewLifeSpan;
+	SetLifeSpan(NewLifeSpan);
 }
 
 void AProjectileBase::SetMaxBounces(int32 NewMaxBounces)
@@ -149,7 +156,10 @@ void AProjectileBase::OnRep_Speed()
 	}
 }
 
-
+void AProjectileBase::OnRep_LifeSpan()
+{
+	SetLifeSpan(LifeSpan);
+}
 
 void AProjectileBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
