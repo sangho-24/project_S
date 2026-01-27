@@ -34,6 +34,7 @@ public:
     ATTRIBUTE_ACCESSORS(UArenaAttributeSet, MaxHP)
     ATTRIBUTE_ACCESSORS(UArenaAttributeSet, AttackPower)
     ATTRIBUTE_ACCESSORS(UArenaAttributeSet, Defense)
+    ATTRIBUTE_ACCESSORS(UArenaAttributeSet, Gold)
 
 protected:
     UPROPERTY(ReplicatedUsing = OnRep_CurrentHP, BlueprintReadOnly, Category = "Attributes")
@@ -48,6 +49,9 @@ protected:
     UPROPERTY(ReplicatedUsing = OnRep_Defense, BlueprintReadOnly, Category = "Attributes")
     FGameplayAttributeData Defense;
 
+    UPROPERTY(ReplicatedUsing = OnRep_Gold, BlueprintReadOnly, Category = "Currency")
+    FGameplayAttributeData Gold;
+
 private:
     float CachedHPPercent = 1.0f;
 
@@ -59,8 +63,11 @@ protected:
     void OnRep_MaxHP(const FGameplayAttributeData& OldMaxHP);
 
     UFUNCTION()
-    virtual void OnRep_AttackPower(const FGameplayAttributeData& OldAttackPower);
+    void OnRep_AttackPower(const FGameplayAttributeData& OldAttackPower);
 
     UFUNCTION()
-    virtual void OnRep_Defense(const FGameplayAttributeData& OldDefense);
+    void OnRep_Defense(const FGameplayAttributeData& OldDefense);
+
+    UFUNCTION()
+    void OnRep_Gold(const FGameplayAttributeData& OldGold);
 };

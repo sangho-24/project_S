@@ -57,6 +57,15 @@ void UHUDWidget::UpdateStats(const UArenaAttributeSet* AttributeSet)
 		DefenseText->SetText(FText::FromString(DefenseString));
 	}
 }
+void UHUDWidget::UpdateGold(int32 gold)
+{
+	if (GoldText)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("골드 업데이트: %d"), gold);
+		const FString GoldString = FString::Printf(TEXT("%d G"), gold);
+		GoldText->SetText(FText::FromString(GoldString));
+	}
+}
 
 void UHUDWidget::InitializeInventory(UInventoryComponent* InInventoryComponent)
 {

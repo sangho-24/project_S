@@ -128,6 +128,7 @@ void ACharBase::PossessedBy(AController* NewController)
     if (AbilitySystemComponent)
     {
         InitializeAbilitySystem();
+        ApplyPassiveGoldIncomeGE();
     }
 }
 
@@ -548,6 +549,47 @@ void ACharBase::UpdateScale()
             FVector(ViewLoc.X, 0.0f, 0.0f), 
             FVector(HPBarComponent->GetComponentLocation().X, 0.0f, 0.0f));
 	    HPBarWidget->UpdateScale(Distance);
+    }
+}
+
+void ACharBase::ApplyPassiveGoldIncomeGE()
+{
+    if (!HasAuthority() || !AbilitySystemComponent)
+    {
+        return;
+    }
+
+    if (PassiveGoldIncomeEffect)
+    {
+        float CurrentTime = GetWorld()->GetTimeSeconds();
+        float GameStartDelay = 3.0f;
+        float DelayTime = FMath::Max(0.0f, GameStartDelay - CurrentTime);
+        FTimerHandle GoldIncomeTimerHandle;
+
+        GetWorld()->GetTimerManager().SetTimer(
+            GoldIncomeTimerHandle,
+            [this]()
+            {
+                if (AbilitySystemComponent && PassiveGoldIncomeEffect)
+                {
+                    FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
+                    ContextHandle.AddSourceObject(this);
+
+                    FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(
+                        PassiveGoldIncomeEffect,
+                        1.0f,
+                        ContextHandle
+                    );
+
+                    if (SpecHandle.IsValid())
+                    {
+                        AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+                    }
+                }
+            },
+            DelayTime,
+            false
+        );
     }
 }
 

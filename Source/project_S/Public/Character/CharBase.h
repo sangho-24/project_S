@@ -80,7 +80,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	UFloatingHPBarWidget* HPBarWidget;
 
-	FVector MouseCursorLocation;
+	
+
+	UPROPERTY(EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<UGameplayEffect> PassiveGoldIncomeEffect;
 
 // 인풋 액션
 protected:
@@ -115,6 +118,7 @@ protected:
 // 임시 변수
 private:
     FVector2D CurrentInputVector;
+	FVector MouseCursorLocation;
 	bool bIsASCInitialized = false;
 	FTimerHandle ScaleUpdateTimerHandle;
 	bool bIsDead = false;
@@ -157,6 +161,7 @@ protected:
 	void Jump(const FInputActionValue &Value);
 	void BasicShot(const FInputActionValue& Value);
 	void UpdateScale();
+	void ApplyPassiveGoldIncomeGE();
 
 
 

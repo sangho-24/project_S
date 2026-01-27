@@ -19,6 +19,7 @@ void UArenaAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME_CONDITION_NOTIFY(UArenaAttributeSet, MaxHP, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UArenaAttributeSet, AttackPower, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UArenaAttributeSet, Defense, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UArenaAttributeSet, Gold, COND_None, REPNOTIFY_Always);
 }
 
 void UArenaAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -95,4 +96,8 @@ void UArenaAttributeSet::OnRep_AttackPower(const FGameplayAttributeData& OldAtta
 void UArenaAttributeSet::OnRep_Defense(const FGameplayAttributeData& OldDefense)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UArenaAttributeSet, Defense, OldDefense);
+}
+void UArenaAttributeSet::OnRep_Gold(const FGameplayAttributeData& OldGold)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UArenaAttributeSet, Gold, OldGold);
 }

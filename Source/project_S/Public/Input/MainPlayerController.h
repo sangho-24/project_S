@@ -50,5 +50,6 @@ private:
 	// 어트리뷰트 값 변경 시 호출되는 콜백함수
 	void OnHealthChanged(const FOnAttributeChangeData& Data);
 	void OnStatsChanged(const FOnAttributeChangeData& Data);
+	void OnGoldChanged(const FOnAttributeChangeData& Data);
 };
 

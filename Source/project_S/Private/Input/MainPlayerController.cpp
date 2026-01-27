@@ -46,7 +46,14 @@ void AMainPlayerController::CreateHUD()
 					ASC->GetGameplayAttributeValueChangeDelegate(
 						AttributeSet->GetDefenseAttribute()).AddUObject(
 							this, &AMainPlayerController::OnStatsChanged);
+
+					ASC->GetGameplayAttributeValueChangeDelegate(
+						AttributeSet->GetGoldAttribute()).AddUObject(
+							this, &AMainPlayerController::OnGoldChanged);
+
+					// 초기 HUD 업데이트
                     HUDWidget->UpdateHP(AttributeSet->GetCurrentHP(), AttributeSet->GetMaxHP());
+                    HUDWidget->UpdateGold(AttributeSet->GetGold());
                     HUDWidget->UpdateStats(AttributeSet);
                 }
 
@@ -186,6 +193,24 @@ void AMainPlayerController::OnStatsChanged(const FOnAttributeChangeData& Data)
     {
         return;
     }
-
     HUDWidget->UpdateStats(AttributeSet);
+}
+
+void AMainPlayerController::OnGoldChanged(const FOnAttributeChangeData& Data)
+{
+    if (!HUDWidget)
+    {
+        return;
+    }
+    const ACharBase* CharBase = Cast<ACharBase>(GetPawn());
+    if (!CharBase)
+    {
+        return;
+    }
+    const UArenaAttributeSet* AttributeSet = CharBase->GetAttributeSet();
+    if (!AttributeSet)
+    {
+        return;
+    }
+    HUDWidget->UpdateGold(AttributeSet->GetGold());
 }

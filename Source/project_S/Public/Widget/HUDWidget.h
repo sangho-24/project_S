@@ -26,6 +26,7 @@ public:
 	// 체력바 업데이트 함수
 	void UpdateHP(float CurrentHP, float MaxHP);
 	void UpdateStats(const UArenaAttributeSet* AttributeSet);
+	void UpdateGold(int32 gold);
 	void InitializeInventory(UInventoryComponent* InInventoryComponent);
 	void RefreshInventory();
 
@@ -49,6 +50,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
 	TSubclassOf<UItemSlotWidget> ItemSlotWidgetClass;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* GoldText;
 
 private:
 	UPROPERTY()
