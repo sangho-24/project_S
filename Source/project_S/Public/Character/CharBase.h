@@ -21,6 +21,7 @@ class UAbilitySystemComponent;
 class UArenaAttributeSet;
 class UWidgetComponent;
 class UFloatingHPBarWidget;
+class AItemShop;
 
 USTRUCT()
 struct FAutoCastAbilityInfo
@@ -122,6 +123,10 @@ private:
 	bool bIsASCInitialized = false;
 	FTimerHandle ScaleUpdateTimerHandle;
 	bool bIsDead = false;
+	bool bIsInShop = false;
+
+	UPROPERTY()
+	AItemShop* CurrentShop = nullptr;
 
 // 자동시전 타이머 관련
 	int32 SkillStack = 0;
@@ -170,14 +175,24 @@ protected:
 	UFUNCTION(Server, Unreliable)
 	void ServerMoveCompleted();
 
+public:
+	UFUNCTION(Server, Reliable)
+	void ServerBuyItemFromShop(AItemShop* Shop, int32 ItemIndex);
+	UFUNCTION(Server, Reliable)
+	void ServerSellItemToShop(AItemShop* Shop, int32 SlotIndex);
+
+
 
 public:
 	FORCEINLINE UPrimitiveComponent* GetPhysicsComponent() const { return Sphere; }
 	FORCEINLINE UArenaAttributeSet* GetAttributeSet() const { return AttributeSet; }
 	FORCEINLINE FVector GetMouseCursorLocation() const { return MouseCursorLocation; }
 	FORCEINLINE bool GetIsDead() const { return bIsDead; }
+	FORCEINLINE bool GetIsInShop() const { return bIsInShop; }
+	FORCEINLINE AItemShop* GetCurrentShop() const { return CurrentShop; }
 
 	void Death();
+	void SetInShop(bool bInShop, AItemShop* Shop);
 
 private:
     void InitializeAbilitySystem();

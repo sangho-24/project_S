@@ -60,4 +60,6 @@ private:
 
 	UFUNCTION()
 	void OnInventoryUpdated();
+
+	void OnInventorySlotClicked(int32 SlotIndex);
 };

@@ -3,7 +3,6 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Widget/HUDWidget.h"
-#include "Widget/InventoryWidget.h"
 #include "Data/InventoryComponent.h"
 #include "Character/CharBase.h"
 #include "AbilitySystemComponent.h"
@@ -110,51 +109,11 @@ void AMainPlayerController::BeginPlay()
 void AMainPlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent(); 
-    if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-    {
-        EnhancedInputComponent->BindAction(OpenInventoryAction, ETriggerEvent::Triggered, this, &AMainPlayerController::OpenInventory);
-    }
+    //if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+    //{
+    //}
 }
 
-void AMainPlayerController::OpenInventory()
-{
-    ACharBase* CharBase = Cast<ACharBase>(GetPawn());
-    if (!CharBase)
-    {
-        return;
-    }
-
-    UInventoryComponent* InventoryComponent = CharBase->FindComponentByClass<UInventoryComponent>();
-    if (!InventoryComponent)
-    {
-        return;
-    }
-
-    // 위젯 생성
-    if (!InventoryWidget && InventoryWidgetClass)
-    {
-        InventoryWidget = CreateWidget<UInventoryWidget>(this, InventoryWidgetClass);
-        if (InventoryWidget)
-        {
-            InventoryWidget->SetInventoryComponent(InventoryComponent);
-        }
-    }
-
-    if (InventoryWidget)
-    {
-        if (InventoryWidget->IsInViewport())
-        {
-            // 인벤토리 닫기
-            InventoryWidget->RemoveFromParent();
-        }
-        else
-        {
-            // 인벤토리 열기 (HUD보다 위에)
-            InventoryWidget->AddToViewport(1);
-            InventoryWidget->RefreshInventory();
-        }
-    }
-}
 
 void AMainPlayerController::OnHealthChanged(const FOnAttributeChangeData& Data)
 {

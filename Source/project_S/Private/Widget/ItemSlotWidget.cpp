@@ -46,7 +46,7 @@ void UItemSlotWidget::SetItemData(const FInventoryItem& Item, int32 SlotIndex)
 	}
 
 	// 버튼 클릭 이벤트 바인딩
-	if (SlotButton)
+	if (SlotButton && !SlotButton->OnClicked.IsBound())
 	{
 		SlotButton->OnClicked.AddDynamic(this, &UItemSlotWidget::OnSlotClicked);
 	}
@@ -54,6 +54,5 @@ void UItemSlotWidget::SetItemData(const FInventoryItem& Item, int32 SlotIndex)
 
 void UItemSlotWidget::OnSlotClicked()
 {
-	// 아이템 사용/장착 로직
-	UE_LOG(LogTemp, Log, TEXT("Slot %d clicked"), CachedSlotIndex);
+	OnSlotClickedDelegate.ExecuteIfBound(CachedSlotIndex);
 }

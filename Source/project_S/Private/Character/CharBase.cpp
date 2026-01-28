@@ -16,6 +16,7 @@
 #include "Abilities/GameplayAbilityTargetTypes.h"
 #include "Components/WidgetComponent.h"
 #include "Widget/FloatingHPBarWidget.h"
+#include "Character/ItemShop.h"
 
 
 
@@ -152,6 +153,12 @@ void ACharBase::Death()
     bIsDead = true;
 }
 
+void ACharBase::SetInShop(bool bInShop, AItemShop* Shop)
+{
+    bIsInShop = bInShop;
+    CurrentShop = Shop;
+}
+
 void ACharBase::InitializeAbilitySystem()
 {
     if (bIsASCInitialized)
@@ -228,22 +235,6 @@ void ACharBase::ApplyHorizontalDamping(float DeltaTime)
         const FVector AngularDrag(0.0f, 0.0f, -AngularVelocity.Z * AngularDragPower);
         Sphere->AddTorqueInRadians(AngularDrag * DeltaTime, NAME_None, true);
     }
-
-    //// 속도 표시
-    //int32 UniqueKey = GetUniqueID();
-    //int32 UniqueKey2 = GetUniqueID();
-    //FString ModeString = HasAuthority() ? TEXT("리슨 서버") : TEXT("클라이언트");
-    //if (GEngine && IsLocallyControlled())
-    //{
-    //    GEngine->AddOnScreenDebugMessage(1, 5.f,
-    //        HasAuthority() ? FColor::Blue : FColor::Green,
-    //        FString::Printf(TEXT("%s 속도 %f / %f"),
-    //            *ModeString, CurrentVelocity.X, CurrentVelocity.Y));
-    //    GEngine->AddOnScreenDebugMessage(2, 5.f,
-    //        HasAuthority() ? FColor::Blue : FColor::Green,
-    //        FString::Printf(TEXT("%s CurrentInputVector %f / %f"),
-    //            *ModeString, CurrentInputVector.X, CurrentInputVector.Y));
-    //}
 }
 
 // Called to bind functionality to input
@@ -487,6 +478,22 @@ void ACharBase::ServerMovementImpulse_Implementation(FVector2D InputVector)
 void ACharBase::ServerMoveCompleted_Implementation()
 {
     CurrentInputVector = FVector2D::ZeroVector;
+}
+
+void ACharBase::ServerBuyItemFromShop_Implementation(AItemShop* Shop, int32 ItemIndex)
+{
+    if (Shop)
+    {
+        Shop->BuyItem(ItemIndex, this);
+    }
+}
+
+void ACharBase::ServerSellItemToShop_Implementation(AItemShop* Shop, int32 SlotIndex)
+{
+    if (Shop)
+    {
+        Shop->SellItem(SlotIndex, this);
+    }
 }
 
 void ACharBase::Jump(const FInputActionValue &Value)

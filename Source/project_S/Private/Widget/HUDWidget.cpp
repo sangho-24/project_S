@@ -7,6 +7,8 @@
 #include "Data/InventoryComponent.h"
 #include "Data/InventoryItem.h"
 #include "Gas/ArenaAttributeSet.h"
+#include "Character/CharBase.h"
+#include "Character/ItemShop.h"
 
 
 void UHUDWidget::NativeDestruct()
@@ -61,7 +63,6 @@ void UHUDWidget::UpdateGold(int32 gold)
 {
 	if (GoldText)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("골드 업데이트: %d"), gold);
 		const FString GoldString = FString::Printf(TEXT("%d G"), gold);
 		GoldText->SetText(FText::FromString(GoldString));
 	}
@@ -118,6 +119,7 @@ void UHUDWidget::RefreshInventory()
 		if (UItemSlotWidget* SlotWidget = CreateWidget<UItemSlotWidget>(this, ItemSlotWidgetClass))
 		{
 			SlotWidget->SetItemData(Inventory[Index], Index);
+			SlotWidget->OnSlotClickedDelegate.BindUObject(this, &UHUDWidget::OnInventorySlotClicked);
 			const int32 Row = Index / ColumnCount;
 			const int32 Column = Index % ColumnCount;
 			UUniformGridSlot* GridSlot = InventoryGridPanel->AddChildToUniformGrid(SlotWidget, Row, Column);
@@ -139,3 +141,34 @@ void UHUDWidget::OnInventoryUpdated()
 	RefreshInventory();
 }
 
+void UHUDWidget::OnInventorySlotClicked(int32 SlotIndex)
+{
+	APlayerController* PC = GetOwningPlayer();
+	if (!PC)
+	{
+		return;
+	}
+
+	ACharBase* Character = Cast<ACharBase>(PC->GetPawn());
+	if (!Character)
+	{
+		return;
+	}
+
+	if (Character->GetIsInShop())
+	{
+		if (AItemShop* Shop = Character->GetCurrentShop())
+		{
+			Character->ServerSellItemToShop(Shop, SlotIndex);
+			UE_LOG(LogTemp, Log, TEXT("아이템 판매: Slot %d"), SlotIndex);
+		}
+	}
+	else
+	{
+		if (InventoryComponent)
+		{
+			InventoryComponent->UseItem(SlotIndex);
+			UE_LOG(LogTemp, Log, TEXT("아이템 사용: Slot %d"), SlotIndex);
+		}
+	}
+}
