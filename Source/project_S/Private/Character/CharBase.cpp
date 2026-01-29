@@ -165,6 +165,15 @@ void ACharBase::Death(ACharBase* Killer)
         UMyUtility::ModifyGold(Killer->GetAbilitySystemComponent(), GoldModifyEffectClass, 100);
     }
 
+    if (AbilitySystemComponent)
+    {
+        FGameplayCueParameters CueParams;
+        CueParams.Location = GetActorLocation();
+        AbilitySystemComponent->ExecuteGameplayCue(
+            FGameplayTag::RequestGameplayTag(TEXT("GameplayCue.Character.Death")),
+            CueParams);
+    }
+
     Sphere->SetVisibility(false);
     Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Sphere->SetSimulatePhysics(false);
