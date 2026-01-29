@@ -110,9 +110,13 @@ protected:
 	float DragPowerFlat = 50.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	float AngularDragPower = 60.0f;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	float UpdateInterval = 0.1f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Battle")
+	float RespawnTime = 10.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Battle")
+	TSubclassOf<UGameplayEffect> GoldModifyEffectClass;
 
 
 
@@ -122,7 +126,10 @@ private:
 	FVector MouseCursorLocation;
 	bool bIsASCInitialized = false;
 	FTimerHandle ScaleUpdateTimerHandle;
+
+	UPROPERTY(ReplicatedUsing = OnRep_IsDead)
 	bool bIsDead = false;
+
 	bool bIsInShop = false;
 
 	UPROPERTY()
@@ -141,6 +148,9 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+
 
 public:
 	virtual void Tick(float DeltaTime) override;
@@ -167,6 +177,10 @@ protected:
 	void BasicShot(const FInputActionValue& Value);
 	void UpdateScale();
 	void ApplyPassiveGoldIncomeGE();
+	void Respawn();
+
+	UFUNCTION()
+	void OnRep_IsDead();
 
 
 
@@ -191,7 +205,7 @@ public:
 	FORCEINLINE bool GetIsInShop() const { return bIsInShop; }
 	FORCEINLINE AItemShop* GetCurrentShop() const { return CurrentShop; }
 
-	void Death();
+	void Death(ACharBase* Killer);
 	void SetInShop(bool bInShop, AItemShop* Shop);
 
 private:

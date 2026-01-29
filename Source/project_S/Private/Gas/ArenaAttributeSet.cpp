@@ -61,8 +61,16 @@ void UArenaAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 				if (GetCurrentHP() <= 0.0f)
 				{
 					ACharBase* Character = Cast<ACharBase>(TargetActor);
+					if (Character)
+					{
+					ACharBase* Killer = nullptr;
+					if (Data.EffectSpec.GetContext().GetInstigator())
+					{
+						Killer = Cast<ACharBase>(Data.EffectSpec.GetContext().GetInstigator());
+					}
 					UE_LOG(LogTemp, Warning, TEXT("!!! %s IS DEAD !!!"), *TargetActor->GetName());
-					Character->Death();
+					Character->Death(Killer);
+					}
 				}
 		}
 	}

@@ -52,8 +52,12 @@ bool UGA_Jump::CanActivateAbility(
         return false;
     }
 
-    // 바닥인지 확인(레이트레이스)
     ACharBase* Character = Cast<ACharBase>(ActorInfo->AvatarActor.Get());
+    if (Character && Character->GetIsDead())
+    {
+        return false;
+    }
+    // 바닥인지 확인(레이트레이스)
     if (Character && Character->GetPhysicsComponent())
     {
         FVector TraceStart = Character->GetPhysicsComponent()->GetComponentLocation();

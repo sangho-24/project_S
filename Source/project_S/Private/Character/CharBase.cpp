@@ -17,6 +17,8 @@
 #include "Components/WidgetComponent.h"
 #include "Widget/FloatingHPBarWidget.h"
 #include "Character/ItemShop.h"
+#include "Net/UnrealNetwork.h"
+#include "Utility/MyUtility.h"
 
 
 
@@ -97,7 +99,7 @@ ACharBase::ACharBase()
 
 }
 
-// Called when the game starts or when spawned
+
 void ACharBase::BeginPlay()
 {
     Super::BeginPlay();
@@ -143,14 +145,118 @@ void ACharBase::OnRep_PlayerState()
     }
 }
 
-void ACharBase::Death()
+void ACharBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(ACharBase, bIsDead);
+}
+
+void ACharBase::Death(ACharBase* Killer)
 {
     if (bIsDead)
     {
         return;
     }
-	UE_LOG(LogTemp, Warning, TEXT("!@펑@!@펑@! [죽음] !@펑@!@펑@!"));
+    UE_LOG(LogTemp, Warning, TEXT("!@펑@!@펑@! [죽음] !@펑@!@펑@!"));
     bIsDead = true;
+
+    if (Killer && Killer->GetAttributeSet())
+    {
+        UMyUtility::ModifyGold(Killer->GetAbilitySystemComponent(), GoldModifyEffectClass, 100);
+    }
+
+    Sphere->SetVisibility(false);
+    Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Sphere->SetSimulatePhysics(false);
+    if (HPBarComponent)
+    {
+        HPBarComponent->SetVisibility(false);
+    }
+
+    if (IsLocallyControlled())
+    {
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            DisableInput(PC);
+        }
+    }
+
+    FTimerHandle RespawnTimerHandle;
+    GetWorld()->GetTimerManager().SetTimer(
+        RespawnTimerHandle,
+        this,
+        &ACharBase::Respawn,
+        RespawnTime,
+        false
+    );
+}
+
+void ACharBase::Respawn()
+{
+    bIsDead = false;
+
+    FVector RespawnLocation = FVector(4000.0f, 4600.0f, 100.0f);
+    SetActorLocation(RespawnLocation);
+
+    Sphere->SetVisibility(true);
+    Sphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    Sphere->SetSimulatePhysics(true);
+    Sphere->SetPhysicsLinearVelocity(FVector::ZeroVector);
+    if (HPBarComponent)
+    {
+        HPBarComponent->SetVisibility(true);
+    }
+
+    if (IsLocallyControlled())
+    {
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            EnableInput(PC);
+        }
+    }
+
+    if (AttributeSet)
+    {
+        AttributeSet->SetCurrentHP(AttributeSet->GetMaxHP());
+    }
+}
+
+void ACharBase::OnRep_IsDead()
+{
+    if (bIsDead)
+    {
+        // 죽음 상태
+        Sphere->SetVisibility(false);
+        Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        if (HPBarComponent)
+        {
+            HPBarComponent->SetVisibility(false);
+        }
+        if (IsLocallyControlled())
+        {
+            if (APlayerController* PC = Cast<APlayerController>(GetController()))
+            {
+                DisableInput(PC);
+            }
+        }
+    }
+    else
+    {
+        // 생존 상태
+        Sphere->SetVisibility(true);
+        Sphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        if (HPBarComponent)
+        {
+            HPBarComponent->SetVisibility(true);
+        }
+        if (IsLocallyControlled())
+        {
+            if (APlayerController* PC = Cast<APlayerController>(GetController()))
+            {
+                EnableInput(PC);
+            }
+        }
+    }
 }
 
 void ACharBase::SetInShop(bool bInShop, AItemShop* Shop)

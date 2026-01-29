@@ -6,6 +6,7 @@
 #include "Widget/ShopWidget.h"
 #include "Gas/ArenaAttributeSet.h"
 #include "AbilitySystemComponent.h"
+#include "Utility/MyUtility.h"
 
 AItemShop::AItemShop()
 {
@@ -72,7 +73,7 @@ void AItemShop::BuyItem(int32 ItemIndex, ACharBase* Buyer)
     // 인벤토리에 아이템 추가
     if (InventoryComponent->AddItem(ItemTemplate, 1))
     {
-        ModifyGold(Buyer, -ItemPrice);
+        UMyUtility::ModifyGold(Buyer->GetAbilitySystemComponent(), GoldModifyEffectClass, -ItemPrice);
         UE_LOG(LogTemp, Log, TEXT("BuyItem 성공: %s 구매 (-%d G)"), *ItemTemplate->ItemName.ToString(), ItemPrice);
     }
     else
@@ -104,35 +105,8 @@ void AItemShop::SellItem(int32 SlotIndex, ACharBase* Seller)
 
     if (InventoryComponent->RemoveItem(SlotIndex, 1))
     {
-        ModifyGold(Seller, SellPrice);
+        UMyUtility::ModifyGold(Seller->GetAbilitySystemComponent(), GoldModifyEffectClass, SellPrice);
         UE_LOG(LogTemp, Log, TEXT("SellItem 성공: %s (+%d G)"), *Item.ItemTemplate->ItemName.ToString(), SellPrice);
-    }
-}
-
-void AItemShop::ModifyGold(ACharBase* Target, int32 Amount)
-{
-    if (!Target || !GoldModifyEffectClass)
-    {
-        return;
-    }
-
-    UAbilitySystemComponent* ASC = Target->GetAbilitySystemComponent();
-    if (!ASC)
-    {
-        return;
-    }
-
-    FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
-    ContextHandle.AddSourceObject(this);
-
-    FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(GoldModifyEffectClass, 1.0f, ContextHandle);
-    if (SpecHandle.IsValid())
-    {
-        SpecHandle.Data.Get()->SetSetByCallerMagnitude(
-            FGameplayTag::RequestGameplayTag(FName("Data.Gold")),
-            static_cast<float>(Amount)
-        );
-        ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
     }
 }
 
