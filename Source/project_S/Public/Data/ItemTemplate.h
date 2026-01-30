@@ -30,6 +30,15 @@ struct FGameplayEffectValue
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float Value = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGameplayTag DurationTag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float Duration = 0.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float Period = 0.0f;
 };
 
 

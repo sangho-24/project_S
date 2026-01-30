@@ -169,6 +169,14 @@ bool UInventoryComponent::UseItem(int32 SlotIndex)
 				if (SpecHandle.IsValid())
 				{
 					SpecHandle.Data.Get()->SetSetByCallerMagnitude(ActiveEffect.DataTag, ActiveEffect.Value);
+					if (ActiveEffect.Duration > 0.0f)
+					{
+						SpecHandle.Data.Get()->SetSetByCallerMagnitude(ActiveEffect.DurationTag, ActiveEffect.Duration);
+					}
+					if (ActiveEffect.Period > 0.0f)
+					{
+						SpecHandle.Data.Get()->Period = ActiveEffect.Period;
+					}
 					FActiveGameplayEffectHandle ActiveHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 					if (ItemTemplate->ItemType == EItemType::Consumable)
 					{

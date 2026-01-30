@@ -29,8 +29,8 @@ void UMyUtility::SpawnFloatingDamage(
 	TSubclassOf<AFloatingDamageActor> DamageActorClass,
 	FVector Location,
 	float DamageAmount,
-	bool bIsCritical,
-	bool bIsHeal)
+	bool bIsHeal,
+	bool bIsCritical)
 {
 	if (!WorldContextObject || !DamageActorClass)
 	{
