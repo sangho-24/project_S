@@ -22,6 +22,7 @@ class UArenaAttributeSet;
 class UWidgetComponent;
 class UFloatingHPBarWidget;
 class AItemShop;
+class AFloatingDamageActor;
 
 USTRUCT()
 struct FAutoCastAbilityInfo
@@ -81,8 +82,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	UFloatingHPBarWidget* HPBarWidget;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<AFloatingDamageActor> FloatingDamageActorClass;
 	
-
 	UPROPERTY(EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<UGameplayEffect> PassiveGoldIncomeEffect;
 
@@ -204,6 +206,7 @@ public:
 	FORCEINLINE bool GetIsDead() const { return bIsDead; }
 	FORCEINLINE bool GetIsInShop() const { return bIsInShop; }
 	FORCEINLINE AItemShop* GetCurrentShop() const { return CurrentShop; }
+	FORCEINLINE TSubclassOf<AFloatingDamageActor> GetFloatingDamageActorClass() const { return FloatingDamageActorClass; }
 
 	void Death(ACharBase* Killer);
 	void SetInShop(bool bInShop, AItemShop* Shop);

@@ -2,6 +2,8 @@
 #include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
 #include "Character/CharBase.h"
+#include "Character/FloatingDamageActor.h"
+#include "Utility/MyUtility.h"
 
 UArenaAttributeSet::UArenaAttributeSet()
 {
@@ -50,28 +52,54 @@ void UArenaAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute,
 void UArenaAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
-	// CurrentHP 변경 시
+	
 	if (Data.EvaluatedData.Attribute == GetCurrentHPAttribute())
 	{
-		if (AActor* TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get())
+		AActor* TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
+		if(!TargetActor)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[서버] %s Take Damage! HP: %.1f / %.1f"),
-				*TargetActor->GetName(), GetCurrentHP(), GetMaxHP());
-			// 사망 체크
-				if (GetCurrentHP() <= 0.0f)
+			return;
+		}
+		ACharBase* Character = Cast<ACharBase>(TargetActor);
+		if (!Character)
+		{
+			return;
+		}
+
+		float DamageDone = Data.EvaluatedData.Magnitude;
+		if (DamageDone < 0.0f) // 데미지인 경우
+		{
+			if (Character->GetFloatingDamageActorClass())
+			{
+			UMyUtility::SpawnFloatingDamage(
+				Character,
+				Character->GetFloatingDamageActorClass(),
+				Character->GetActorLocation(),
+				FMath::Abs(DamageDone),
+				false,false);
+			}
+
+			if (GetCurrentHP() <= 0.0f)
+			{
+				ACharBase* Killer = nullptr;
+				if (Data.EffectSpec.GetContext().GetInstigator())
 				{
-					ACharBase* Character = Cast<ACharBase>(TargetActor);
-					if (Character)
-					{
-					ACharBase* Killer = nullptr;
-					if (Data.EffectSpec.GetContext().GetInstigator())
-					{
-						Killer = Cast<ACharBase>(Data.EffectSpec.GetContext().GetInstigator());
-					}
-					UE_LOG(LogTemp, Warning, TEXT("!!! %s IS DEAD !!!"), *TargetActor->GetName());
-					Character->Death(Killer);
-					}
+					Killer = Cast<ACharBase>(Data.EffectSpec.GetContext().GetInstigator());
 				}
+				Character->Death(Killer);
+			}
+		}
+		else if (DamageDone > 0.0f)
+		{
+			if (Character->GetFloatingDamageActorClass())
+			{
+				UMyUtility::SpawnFloatingDamage(
+					Character,
+					Character->GetFloatingDamageActorClass(),
+					Character->GetActorLocation(),
+					FMath::Abs(DamageDone),
+					false, true);
+			}
 		}
 	}
 }

@@ -1,6 +1,8 @@
 #include "Utility/MyUtility.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayTagContainer.h"
+#include "Character/FloatingDamageActor.h"
+#include "Engine/World.h"
 
 void UMyUtility::ModifyGold(UAbilitySystemComponent* ASC, TSubclassOf<UGameplayEffect> GoldEffect, int32 Amount)
 {
@@ -20,4 +22,35 @@ void UMyUtility::ModifyGold(UAbilitySystemComponent* ASC, TSubclassOf<UGameplayE
         );
         ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
     }
+}
+
+void UMyUtility::SpawnFloatingDamage(
+	UObject* WorldContextObject,
+	TSubclassOf<AFloatingDamageActor> DamageActorClass,
+	FVector Location,
+	float DamageAmount,
+	bool bIsCritical,
+	bool bIsHeal)
+{
+	if (!WorldContextObject || !DamageActorClass)
+	{
+		return;
+	}
+
+	UWorld* World = WorldContextObject->GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	AFloatingDamageActor* DamageActor = World->SpawnActor<AFloatingDamageActor>(
+		DamageActorClass,
+		Location,
+		FRotator::ZeroRotator
+	);
+
+	if (DamageActor)
+	{
+		DamageActor->Initialize(DamageAmount, bIsHeal, bIsCritical);
+	}
 }
