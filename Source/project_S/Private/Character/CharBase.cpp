@@ -17,6 +17,7 @@
 #include "Character/ItemShop.h"
 #include "Net/UnrealNetwork.h"
 #include "Utility/MyUtility.h"
+#include "Character/FloatingDamageActor.h"
 
 
 
@@ -147,6 +148,20 @@ void ACharBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(ACharBase, bIsDead);
+}
+
+void ACharBase::MulticastSpawnFloatingDamage_Implementation(float DamageAmount, bool bIsHeal, bool bIsCritical)
+{
+    if (FloatingDamageActorClass)
+    {
+        UMyUtility::SpawnFloatingDamage(
+            this,
+            FloatingDamageActorClass,
+            GetActorLocation(),
+            DamageAmount,
+            bIsHeal,
+            bIsCritical);
+    }
 }
 
 void ACharBase::Death(ACharBase* Killer)

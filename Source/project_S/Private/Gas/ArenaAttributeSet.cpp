@@ -2,8 +2,6 @@
 #include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
 #include "Character/CharBase.h"
-#include "Character/FloatingDamageActor.h"
-#include "Utility/MyUtility.h"
 
 UArenaAttributeSet::UArenaAttributeSet()
 {
@@ -69,16 +67,7 @@ void UArenaAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 		float DamageDone = Data.EvaluatedData.Magnitude;
 		if (DamageDone < 0.0f) // 데미지인 경우
 		{
-			if (Character->GetFloatingDamageActorClass())
-			{
-			UMyUtility::SpawnFloatingDamage(
-				Character,
-				Character->GetFloatingDamageActorClass(),
-				Character->GetActorLocation(),
-				FMath::Abs(DamageDone),
-				false,false);
-			}
-
+			Character->MulticastSpawnFloatingDamage(FMath::Abs(DamageDone), false, false);
 			if (GetCurrentHP() <= 0.0f)
 			{
 				ACharBase* Killer = nullptr;
@@ -91,15 +80,7 @@ void UArenaAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 		}
 		else if (DamageDone > 0.0f)
 		{
-			if (Character->GetFloatingDamageActorClass())
-			{
-				UMyUtility::SpawnFloatingDamage(
-					Character,
-					Character->GetFloatingDamageActorClass(),
-					Character->GetActorLocation(),
-					FMath::Abs(DamageDone),
-					false, true);
-			}
+			Character->MulticastSpawnFloatingDamage(FMath::Abs(DamageDone), true, false);
 		}
 	}
 }

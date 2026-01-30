@@ -196,6 +196,8 @@ public:
 	void ServerBuyItemFromShop(AItemShop* Shop, int32 ItemIndex);
 	UFUNCTION(Server, Reliable)
 	void ServerSellItemToShop(AItemShop* Shop, int32 SlotIndex);
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastSpawnFloatingDamage(float DamageAmount, bool bIsHeal, bool bIsCritical);
 
 
 
@@ -206,7 +208,6 @@ public:
 	FORCEINLINE bool GetIsDead() const { return bIsDead; }
 	FORCEINLINE bool GetIsInShop() const { return bIsInShop; }
 	FORCEINLINE AItemShop* GetCurrentShop() const { return CurrentShop; }
-	FORCEINLINE TSubclassOf<AFloatingDamageActor> GetFloatingDamageActorClass() const { return FloatingDamageActorClass; }
 
 	void Death(ACharBase* Killer);
 	void SetInShop(bool bInShop, AItemShop* Shop);
