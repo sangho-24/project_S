@@ -25,13 +25,6 @@ void UGA_HomingShot::ActivateAbility(
         EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
         return;
     }
-    UArenaAttributeSet* AttributeSet = Character->GetAttributeSet();
-    if (!AttributeSet)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("AttributeSet 없음"));
-        EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-        return;
-    }
 
     FVector SpawnLocation = Character->GetActorLocation();
     FVector TargetDirection = FindTargetDirection(Character, SpawnLocation);

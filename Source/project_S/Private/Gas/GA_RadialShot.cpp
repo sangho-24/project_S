@@ -1,6 +1,5 @@
 #include "Gas/GA_RadialShot.h"
 #include "Character/ProjectileBase.h"
-#include "Gas/ArenaAttributeSet.h"
 #include "Character/CharBase.h"
 #include "GameplayTagContainer.h"
 
@@ -25,14 +24,6 @@ void UGA_RadialShot::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	if (!Character)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("캐릭터 없음"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-		return;
-	}
-
-	UArenaAttributeSet* AttributeSet = Character->GetAttributeSet();
-	if (!AttributeSet)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AttributeSet 없음"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}

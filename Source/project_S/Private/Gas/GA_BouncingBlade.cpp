@@ -1,6 +1,5 @@
 #include "Gas/GA_BouncingBlade.h"
 #include "Character/ProjectileBase.h"
-#include "Gas/ArenaAttributeSet.h"
 #include "Character/CharBase.h"
 
 
@@ -22,13 +21,7 @@ void UGA_BouncingBlade::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
-	UArenaAttributeSet* AttributeSet = Character->GetAttributeSet();
-	if (!AttributeSet)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AttributeSet 없음"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-		return;
-	}
+
 	// 투사체 스폰
 	if (ProjectileClass)
 	{

@@ -2,8 +2,6 @@
 #include "Gas/GA_BasicShot.h"
 #include "Character/CharBase.h"
 #include "Character/ProjectileBase.h"
-#include "Gas/ArenaAttributeSet.h"
-#include "DrawDebugHelpers.h"
 #include "GameplayTagContainer.h"
 
 UGA_BasicShot::UGA_BasicShot()
@@ -45,18 +43,6 @@ void UGA_BasicShot::ActivateAbility(
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
-
-	UArenaAttributeSet* AttributeSet = Character->GetAttributeSet();
-	if (!AttributeSet)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AttributeSet 없음"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-		return;
-	}
-
-	// Attribute에서 공격력 가져오기
-	//float ProjectileDamage = 5.f;
-	//float ProjectileSpeed = 1000.f;
 
 	// EventData에서 마우스 위치 가져오기
 	FVector MouseCursorLocation = FVector::ZeroVector;
