@@ -5,10 +5,19 @@
 #include "GameplayTagContainer.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 AProjectile_Homing::AProjectile_Homing()
 {
 	PrimaryActorTick.bCanEverTick = true;
+}
+
+void AProjectile_Homing::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AProjectile_Homing, HomingPower);
+	DOREPLIFETIME(AProjectile_Homing, HomingRadius);
 }
 
 void AProjectile_Homing::BeginPlay()

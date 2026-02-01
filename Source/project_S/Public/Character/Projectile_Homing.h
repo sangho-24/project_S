@@ -14,6 +14,8 @@ class PROJECT_S_API AProjectile_Homing : public AProjectileBase
 
 public:
 	AProjectile_Homing();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 
 protected:
 	virtual void BeginPlay() override;
