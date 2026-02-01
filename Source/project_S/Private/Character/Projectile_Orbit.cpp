@@ -4,6 +4,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayTagContainer.h"
 #include "Net/UnrealNetwork.h"
+#include "Gas/ArenaAttributeSet.h"
 
 void AProjectile_Orbit::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -87,9 +88,21 @@ void AProjectile_Orbit::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent,
 			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(DamageEffect, 1.0f, ContextHandle);
 			if (SpecHandle.IsValid())
 			{
-				FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(TEXT("Data.Damage"));
-				SpecHandle.Data.Get()->SetSetByCallerMagnitude(DamageTag, Damage);
+				float FinalDamage = Damage;
+				if (SourceASC && AttackPowerMultiplier > 0.0f)
+				{
+					const UArenaAttributeSet* SourceAttributeSet = SourceASC->GetSet<UArenaAttributeSet>();
+					if (SourceAttributeSet)
+					{
+						float AttackPower = SourceAttributeSet->GetAttackPower();
+						FinalDamage += AttackPower * AttackPowerMultiplier;
+					}
+				}
 
+				FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(TEXT("Data.Damage"));
+				SpecHandle.Data.Get()->SetSetByCallerMagnitude(DamageTag, FinalDamage);
+
+				// GE 적용
 				TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 			}
 		}

@@ -38,8 +38,11 @@ protected:
 	UProjectileMovementComponent* ProjectileMovement;
 
 	// 값들
-	UPROPERTY(ReplicatedUsing = OnRep_Damage, BlueprintReadOnly, Category = "Projectile")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Projectile")
 	float Damage = 5.0f;
+
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Projectile")
+	float AttackPowerMultiplier = 1.0f;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Speed, BlueprintReadOnly, Category = "Projectile")
 	float Speed = 1000.0f;
@@ -47,7 +50,7 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_LifeSpan, BlueprintReadOnly, Category = "Projectile")
 	float LifeSpan = 5.0f;
 
-	UPROPERTY(ReplicatedUsing = OnRep_MaxBounces, BlueprintReadOnly, Category = "Projectile")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Projectile")
 	int32 MaxBounces = 0;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Bounciness, BlueprintReadOnly, Category = "Projectile")
@@ -72,7 +75,7 @@ public:
 
 	// 값 설정 함수
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
-	void SetDamage(float NewDamage);
+	void SetDamage(float NewDamage, float NewAttackMultiplier);
 
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
 	void SetSpeed(float NewSpeed);
@@ -94,16 +97,10 @@ public:
 protected:
 	// 리플리케이션 콜백
 	UFUNCTION()
-	void OnRep_Damage();
-
-	UFUNCTION()
 	void OnRep_Speed();
 
 	UFUNCTION()
 	void OnRep_LifeSpan();
-
-	UFUNCTION()
-	void OnRep_MaxBounces();
 
 	UFUNCTION()
 	void OnRep_Bounciness();

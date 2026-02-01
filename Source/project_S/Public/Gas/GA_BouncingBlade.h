@@ -35,6 +35,9 @@ protected:
     float ProjectileDamage = 5.0f;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
+    float AttackPowerMultiplier = 1.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
 	int32 ProjectileMaxBounces = 5;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")

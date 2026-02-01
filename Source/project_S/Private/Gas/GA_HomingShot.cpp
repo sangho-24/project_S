@@ -48,7 +48,7 @@ void UGA_HomingShot::ActivateAbility(
 
             if (Projectile)
             {
-                Projectile->SetDamage(ProjectileDamage);
+                Projectile->SetDamage(ProjectileDamage, AttackPowerMultiplier);
                 Projectile->SetSpeed(ProjectileSpeed);
                 Projectile->SetProjectileLifeSpan(ProjectileLifeSpan);
                 if (AProjectile_Homing* HomingProjectile = Cast<AProjectile_Homing>(Projectile))

@@ -57,6 +57,7 @@ void AProjectileBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AProjectileBase, Damage);
+	DOREPLIFETIME(AProjectileBase, AttackPowerMultiplier);
 	DOREPLIFETIME(AProjectileBase, Speed);
 	DOREPLIFETIME(AProjectileBase, LifeSpan);
 	DOREPLIFETIME(AProjectileBase, MaxBounces);
@@ -85,9 +86,10 @@ void AProjectileBase::BeginPlay()
 }
 
 
-void AProjectileBase::SetDamage(float NewDamage)
+void AProjectileBase::SetDamage(float NewDamage, float NewAttackMultiplier)
 {
 	Damage = NewDamage;
+	AttackPowerMultiplier = NewAttackMultiplier;
 }
 
 void AProjectileBase::SetSpeed(float NewSpeed)
@@ -130,9 +132,7 @@ void AProjectileBase::Launch(const FVector& Direction)
 	}
 }
 
-void AProjectileBase::OnRep_MaxBounces()
-{
-}
+
 
 void AProjectileBase::OnRep_Bounciness()
 {
@@ -143,9 +143,7 @@ void AProjectileBase::OnRep_Bounciness()
 	UE_LOG(LogTemp, Warning, TEXT("[클라-OnRep] Bounciness: %f"), Bounciness);
 }
 
-void AProjectileBase::OnRep_Damage()
-{
-}
+
 
 void AProjectileBase::OnRep_Speed()
 {

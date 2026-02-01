@@ -48,7 +48,7 @@ void UGA_OrbitOrb::ActivateAbility(
 
 			if (Projectile)
 			{
-				Projectile->SetDamage(ProjectileDamage);
+				Projectile->SetDamage(ProjectileDamage, AttackPowerMultiplier);
 				Projectile->SetProjectileLifeSpan(ProjectileLifeSpan);
 				if (AProjectile_Orbit* Orb = Cast<AProjectile_Orbit>(Projectile))
 				{

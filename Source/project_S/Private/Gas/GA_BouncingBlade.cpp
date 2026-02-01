@@ -33,6 +33,7 @@ void UGA_BouncingBlade::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		// 람다용 로컬 변수 복사본
 		TSubclassOf<AProjectileBase> LocalProjectileClass = ProjectileClass;
 		float LocalProjectileDamage = ProjectileDamage;
+		float LocalAttackPowerMultiplier = AttackPowerMultiplier;
 		float LocalProjectileSpeed = ProjectileSpeed;
 		float LocalProjectileLifeSpan = ProjectileLifeSpan;
 		int32 LocalProjectileCount = ProjectileCount;
@@ -45,7 +46,7 @@ void UGA_BouncingBlade::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 			FTimerHandle TimerHandle;
 			Character->GetWorldTimerManager().SetTimer(
 				TimerHandle,
-				[SpawnParams, Character, LocalProjectileClass, LocalProjectileDamage, LocalProjectileSpeed, LocalProjectileLifeSpan, LocalProjectileCount, LocalProjectileBounciness, LocalProjectileMaxBounces, LocalWorld, i]()
+				[SpawnParams, Character, LocalProjectileClass, LocalProjectileDamage, LocalAttackPowerMultiplier, LocalProjectileSpeed, LocalProjectileLifeSpan, LocalProjectileCount, LocalProjectileBounciness, LocalProjectileMaxBounces, LocalWorld, i]()
 				{
 					float RandomRotation = FMath::FRandRange(0.0f, 360.0f);
 					float AngleRad = FMath::DegreesToRadians(RandomRotation);
@@ -57,7 +58,7 @@ void UGA_BouncingBlade::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 						LocalProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
 					if (Projectile)
 					{
-						Projectile->SetDamage(LocalProjectileDamage);
+						Projectile->SetDamage(LocalProjectileDamage, LocalAttackPowerMultiplier);
 						Projectile->SetSpeed(LocalProjectileSpeed);
 						Projectile->SetMaxBounces(LocalProjectileMaxBounces);
 						Projectile->SetBounciness(LocalProjectileBounciness);

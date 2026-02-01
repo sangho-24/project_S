@@ -19,6 +19,5 @@ protected:
 	float ArmorConstant = 100.0f;
 
 private:
-	FGameplayEffectAttributeCaptureDefinition AttackPowerDef;
 	FGameplayEffectAttributeCaptureDefinition DefenseDef;
 };

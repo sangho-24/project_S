@@ -41,6 +41,7 @@ void UGA_RadialShot::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		// 람다용 로컬 변수 복사본
 		TSubclassOf<AProjectileBase> LocalProjectileClass = ProjectileClass;
 		float LocalProjectileDamage = ProjectileDamage;
+		float LocalAttackPowerMultiplier = AttackPowerMultiplier;
 		float LocalProjectileSpeed = ProjectileSpeed;
 		float LocalProjectileLifeSpan = ProjectileLifeSpan;
 		int32 LocalProjectileCount = ProjectileCount;
@@ -51,7 +52,7 @@ void UGA_RadialShot::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 			FTimerHandle TimerHandle;
 			Character->GetWorldTimerManager().SetTimer(
 				TimerHandle, 
-				[SpawnParams, Character, LocalProjectileClass, LocalProjectileDamage, LocalProjectileSpeed, LocalProjectileLifeSpan, LocalProjectileCount, RandomRotation, LocalWorld, i]()
+				[SpawnParams, Character, LocalProjectileClass, LocalProjectileDamage, LocalAttackPowerMultiplier, LocalProjectileSpeed, LocalProjectileLifeSpan, LocalProjectileCount, RandomRotation, LocalWorld, i]()
 			{
 			float AngleDeg = RandomRotation + i * (360.0f / LocalProjectileCount);
 			float AngleRad = FMath::DegreesToRadians(AngleDeg);
@@ -63,7 +64,7 @@ void UGA_RadialShot::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 				LocalProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
 			if (Projectile)
 			{
-				Projectile->SetDamage(LocalProjectileDamage);
+				Projectile->SetDamage(LocalProjectileDamage, LocalAttackPowerMultiplier);
 				Projectile->SetSpeed(LocalProjectileSpeed);
 				Projectile->SetProjectileLifeSpan(LocalProjectileLifeSpan);
 				Projectile->Launch(Direction);

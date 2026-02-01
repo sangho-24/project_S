@@ -36,5 +36,8 @@ protected:
     float ProjectileDamage = 5.0f;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
+    float AttackPowerMultiplier = 1.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
     float ProjectileLifeSpan = 5.0f;
 };

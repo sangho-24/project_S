@@ -3,6 +3,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayTagContainer.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Gas/ArenaAttributeSet.h"
 
 AProjectile_BouncingBlade::AProjectile_BouncingBlade()
 {
@@ -62,8 +63,21 @@ void AProjectile_BouncingBlade::OnOverlapBegin(UPrimitiveComponent* OverlappedCo
 			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(DamageEffect, 1.0f, ContextHandle);
 			if (SpecHandle.IsValid())
 			{
+				float FinalDamage = Damage;
+				if (SourceASC && AttackPowerMultiplier > 0.0f)
+				{
+					const UArenaAttributeSet* SourceAttributeSet = SourceASC->GetSet<UArenaAttributeSet>();
+					if (SourceAttributeSet)
+					{
+						float AttackPower = SourceAttributeSet->GetAttackPower();
+						FinalDamage += AttackPower * AttackPowerMultiplier;
+					}
+				}
+
 				FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(TEXT("Data.Damage"));
-				SpecHandle.Data.Get()->SetSetByCallerMagnitude(DamageTag, Damage);
+				SpecHandle.Data.Get()->SetSetByCallerMagnitude(DamageTag, FinalDamage);
+
+				// GE 적용
 				TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 			}
 		}
