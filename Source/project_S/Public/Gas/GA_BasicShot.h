@@ -29,17 +29,6 @@ public:
         const FGameplayTagContainer* TargetTags,
         FGameplayTagContainer* OptionalRelevantTags) const override;
 
-    virtual void InputReleased(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayAbilityActivationInfo ActivationInfo) override;
-
-    virtual void CancelAbility(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayAbilityActivationInfo ActivationInfo,
-        bool bReplicateCancelAbility) override;
-
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
     TSubclassOf<AProjectileBase> ProjectileClass;

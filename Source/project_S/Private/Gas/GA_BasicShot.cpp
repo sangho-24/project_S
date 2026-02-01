@@ -135,20 +135,3 @@ bool UGA_BasicShot::CanActivateAbility(
 
 	return true;
 }
-
-void UGA_BasicShot::InputReleased(
-	const FGameplayAbilitySpecHandle Handle, 
-	const FGameplayAbilityActorInfo* ActorInfo, 
-	const FGameplayAbilityActivationInfo ActivationInfo)
-{
-
-}
-
-void UGA_BasicShot::CancelAbility(
-	const FGameplayAbilitySpecHandle Handle, 
-	const FGameplayAbilityActorInfo* ActorInfo, 
-	const FGameplayAbilityActivationInfo ActivationInfo, 
-	bool bReplicateCancelAbility)
-{
-	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
-}
