@@ -1,6 +1,6 @@
 #include "Gas/GA_HomingShot.h"
 #include "Character/CharBase.h"
-#include "Character/ProjectileBase.h"
+#include "Character/Projectile_Homing.h"
 #include "Kismet/GameplayStatics.h"
 
 void UGA_HomingShot::ActivateAbility(
@@ -58,6 +58,11 @@ void UGA_HomingShot::ActivateAbility(
                 Projectile->SetDamage(ProjectileDamage);
                 Projectile->SetSpeed(ProjectileSpeed);
                 Projectile->SetProjectileLifeSpan(ProjectileLifeSpan);
+                if (AProjectile_Homing* HomingProjectile = Cast<AProjectile_Homing>(Projectile))
+                {
+                    HomingProjectile->SetHomingPower(HomingPower);
+                    HomingProjectile->SetHomingRadius(HomingRadius);
+                }
                 Projectile->Launch(Direction);
             }
         }
