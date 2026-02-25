@@ -53,6 +53,8 @@ void UArenaAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 	
 	if (Data.EvaluatedData.Attribute == GetCurrentHPAttribute())
 	{
+		SetCurrentHP(FMath::Clamp(GetCurrentHP(), 0.0f, GetMaxHP()));
+
 		AActor* TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
 		if(!TargetActor)
 		{

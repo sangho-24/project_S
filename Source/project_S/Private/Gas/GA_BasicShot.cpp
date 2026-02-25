@@ -87,10 +87,6 @@ void UGA_BasicShot::ActivateAbility(
 			Projectile->SetProjectileLifeSpan(ProjectileLifeSpan);
 			Projectile->Launch(Direction);
 		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("투사체 스폰 실패!"));
-		}
 	}
 	else
 	{

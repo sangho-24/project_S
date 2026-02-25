@@ -81,11 +81,23 @@ FVector AMainPlayerController::GetMouseCursorLocation() const
     }
     else
     {
-        // 평면과 교차점 계산
-        FVector PlaneIntersectionPoint = FMath::LinePlaneIntersection(
+        // 조종중인 폰의 Z위치 평면을 기준으로
+        const APawn* ControlledPawn = GetPawn();
+        if (ControlledPawn)
+        {
+            const float PlaneZ = ControlledPawn->GetActorLocation().Z;
+            const FVector PlaneIntersectionPoint = FMath::LinePlaneIntersection(
+                MouseWorldLocation,
+                TraceEnd,
+                FVector(0.0f, 0.0f, PlaneZ),
+                FVector::UpVector);
+            return PlaneIntersectionPoint;
+        }
+        // 폰이 없으면 Z=0 평면 사용
+        const FVector PlaneIntersectionPoint = FMath::LinePlaneIntersection(
             MouseWorldLocation,
             TraceEnd,
-            FVector(0, 0, 0),
+            FVector::ZeroVector,
             FVector::UpVector);
         return PlaneIntersectionPoint;
     }

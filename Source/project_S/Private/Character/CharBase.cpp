@@ -170,7 +170,6 @@ void ACharBase::Death(ACharBase* Killer)
     {
         return;
     }
-    UE_LOG(LogTemp, Warning, TEXT("!@펑@!@펑@! [죽음] !@펑@!@펑@!"));
     bIsDead = true;
 
     if (Killer && Killer->GetAttributeSet())
@@ -697,7 +696,7 @@ void ACharBase::ApplyPassiveGoldIncomeGE()
     if (PassiveGoldIncomeEffect)
     {
         float CurrentTime = GetWorld()->GetTimeSeconds();
-        float GameStartDelay = 3.0f;
+        float GameStartDelay = 15.0f;
         float DelayTime = FMath::Max(0.0f, GameStartDelay - CurrentTime);
         FTimerHandle GoldIncomeTimerHandle;
 

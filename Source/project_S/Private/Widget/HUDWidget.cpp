@@ -55,7 +55,7 @@ void UHUDWidget::UpdateStats(const UArenaAttributeSet* AttributeSet)
 
 	if (DefenseText)
 	{
-		const FString DefenseString = FString::Printf(TEXT("%.0f"), Defense);
+		const FString DefenseString = FString::Printf(TEXT("%.0f  (%.0f%%)"), Defense, Defense / (Defense + 100) * 100);
 		DefenseText->SetText(FText::FromString(DefenseString));
 	}
 }
